@@ -75,3 +75,17 @@ for key, value in game_counts.items():
 
 print(f"The total score is {total}")
 
+
+
+# This hot garbage would also work
+# but i built this after, not going to invest time in it
+# win_loss = [1, 2, 3]
+# def get_score(lhs, rhs):
+#     tmp = [win_loss[i + LHS[lhs] % len(win_loss)] for i, _ in enumerate(win_loss)]
+#     game_outcomes = {
+#         GameOutcome.LOSS: tmp[0] + GameOutcome.LOSS,
+#         GameOutcome.DRAW: tmp[1] + GameOutcome.DRAW,
+#         GameOutcome.WIN:  tmp[2] + GameOutcome.WIN,
+#     }
+#     return game_outcomes[rhs]
+
