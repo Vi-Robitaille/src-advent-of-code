@@ -34,3 +34,4 @@ with open(input_file_path) as f:
             total += 1
 
 print(f"The total is: {total}")
+
