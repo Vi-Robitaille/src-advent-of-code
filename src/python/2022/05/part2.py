@@ -65,16 +65,22 @@ class Storage:
 
 
 cargo_bay = Storage()
+line_number = 0
+
 with open(input_file_path) as f:
     for line in f.readlines():
-        # line = line.strip('\n')
+        line_number += 1
+        
         if crate_regex.match(line):
             match = crate_regex.finditer(line)
             cargo_bay.append(match)
-            for m in match:
-                print(f"Found cid: '{m.group().strip()}'")
+            # for m in match:
+            #     print(f"Found cid: '{m.group().strip()}'")
         elif move_regex.match(line):
             command = MoveCommand(line)
             cargo_bay.move(command)
+
+        if line_number % 10 == 0:
+            print(line_number)
 
 print(cargo_bay.solution())
