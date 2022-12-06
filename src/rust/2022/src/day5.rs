@@ -2,10 +2,10 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::{fmt, vec};
 
-// const ARRAY_SIZE: usize = 1_000_000 * 9; // for meme file sizes
+const ARRAY_SIZE: usize = 2_000_000 * 9; // for meme file sizes
 // https://www.reddit.com/r/adventofcode/comments/zd1hqy/comment/iz0avta/?utm_source=share&utm_medium=web2x&context=3
 
-const ARRAY_SIZE: usize = 60;
+// const ARRAY_SIZE: usize = 60;
 const CARGO_SPOTS: usize = 9;
 const DEBUG: bool = false;
 
@@ -85,7 +85,7 @@ impl CargoStorage {
         let source_stack_offset: usize = instruction.source * ARRAY_SIZE;
 
         let source_start_index: usize = source_stack_offset + self.cargo_stack_size[instruction.source] - instruction.amount;
-        let source_end_index: usize = source_stack_offset + self.cargo_stack_size[instruction.source];
+        let source_end_index: usize = source_stack_offset + self.cargo_stack_size[instruction.source] - 1;
 
         let destination_stack_offset: usize = instruction.destination * ARRAY_SIZE;
 
@@ -103,21 +103,20 @@ impl CargoStorage {
             println!();
         }
 
-        let mut crane_claw: Vec<char> = self.cargo[source_start_index..source_end_index].to_vec();
-
-        if reverse {
-            crane_claw.reverse();
-        }
-
-        self.cargo_stack_size[instruction.source] -= instruction.amount;
-        for i in source_start_index..source_end_index {
-            self.cargo[i] = '!'
-        }
-
         self.cargo_stack_size[instruction.destination] += instruction.amount;
-        for i in destination_start_index..destination_end_index {
-            self.cargo[i] = crane_claw.pop().expect("Nothing to pop!");
+        self.cargo_stack_size[instruction.source] -= instruction.amount;
+        for (index, element) in (destination_start_index..destination_end_index).enumerate() {
+            let source_index: usize;
+            if reverse {
+                source_index = source_start_index + index;
+            } else {
+                source_index = source_end_index - index;
+            }
+            self.cargo[element] = self.cargo[source_index];
+            self.cargo[source_index] = '!'
         }
+
+        
     }
 
     fn get_solution(&self) -> String {
