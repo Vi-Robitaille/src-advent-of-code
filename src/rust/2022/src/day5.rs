@@ -2,6 +2,14 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use std::{fmt, vec};
 
+// 
+// Note for anyone reading this, this is not meant to look like production code
+//   this is an experiment in different ways to handle a crap ton of data
+//     with the addition of SplitOffCargoStorage I would use that over my previous implementation
+//       purely because it's so much easier to read, understand, and support
+//
+
+
 const ARRAY_SIZE: usize = 2_000_000 * 9; // for meme file sizes
 // https://www.reddit.com/r/adventofcode/comments/zd1hqy/comment/iz0avta/?utm_source=share&utm_medium=web2x&context=3
 
@@ -133,8 +141,49 @@ impl CargoStorage {
     }
 }
 
+
+// 
+// I learned of split off in vec from a man much smarter than I
+// it is much faster, this saves about 5 sec over the other implementation
+// 
+#[derive(Clone)]
+struct SplitOffCargoStorage {
+    cargo: Vec<Vec<char>>,
+}
+
+impl SplitOffCargoStorage {
+    fn new(cargo_definition: Vec<Vec<char>>) -> Self {
+        Self { 
+            cargo: cargo_definition
+        }
+    }
+
+    fn execute_instruction(&mut self, instruction: &CargoInstruction, reverse: bool) {
+        let source_start_index: usize = self.cargo[instruction.source].len() - instruction.amount;
+        let mut crane: Vec<char> = self.cargo[instruction.source].split_off(source_start_index);
+        if reverse {
+            crane.reverse();
+        }
+        self.cargo[instruction.destination].append(&mut crane);
+    }
+
+    fn get_solution(&self) -> String {
+        let mut solution: String = String::new();
+        for col in &self.cargo {
+            solution.push(*col.last().unwrap_or(&'!'));
+        }
+        solution
+    }
+}
+
+impl fmt::Display for SplitOffCargoStorage {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\nFormat for this is not implemented yet\n")
+    }
+}
+
 #[aoc_generator(day5)]
-fn parse_input_day1(input: &str) -> (CargoStorage, Vec<CargoInstruction>) {
+fn parse_input_day1(input: &str) -> (SplitOffCargoStorage, Vec<CargoInstruction>) {
     let split: Vec<&str> = input.split("\n\n").collect::<Vec<_>>();
 
     let mut indexes: [usize; CARGO_SPOTS] = [0; CARGO_SPOTS];
@@ -144,7 +193,7 @@ fn parse_input_day1(input: &str) -> (CargoStorage, Vec<CargoInstruction>) {
         indexes[i] = indexes[i - 1] + 4;
     }
 
-    let cargo: CargoStorage;
+    let cargo: SplitOffCargoStorage;
     let mut storage_of_chars: Vec<Vec<char>> = Vec::new();
     for _ in 0..CARGO_SPOTS {
         storage_of_chars.push(vec![]);
@@ -161,7 +210,7 @@ fn parse_input_day1(input: &str) -> (CargoStorage, Vec<CargoInstruction>) {
         }
     }
 
-    cargo = CargoStorage::new(storage_of_chars);
+    cargo = SplitOffCargoStorage::new(storage_of_chars);
 
     let mut instructions: Vec<CargoInstruction> = vec![];
     for line in split[1].split('\n') {
@@ -172,7 +221,7 @@ fn parse_input_day1(input: &str) -> (CargoStorage, Vec<CargoInstruction>) {
 }
 
 #[aoc(day5, part1)]
-fn part_one(input: &(CargoStorage, Vec<CargoInstruction>)) -> String {
+fn part_one(input: &(SplitOffCargoStorage, Vec<CargoInstruction>)) -> String {
     let mut cargo = input.0.clone();
     
     if DEBUG {
@@ -192,7 +241,7 @@ fn part_one(input: &(CargoStorage, Vec<CargoInstruction>)) -> String {
 }
 
 #[aoc(day5, part2)]
-fn part_two(input: &(CargoStorage, Vec<CargoInstruction>)) -> String {
+fn part_two(input: &(SplitOffCargoStorage, Vec<CargoInstruction>)) -> String {
     let mut cargo = input.0.clone();
     
     if DEBUG {
