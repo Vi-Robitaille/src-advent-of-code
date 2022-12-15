@@ -4,7 +4,7 @@ from sys import modules
 
 # Quality of life, define the input file location
 src = Path(modules['__main__'].__file__).resolve().parent
-input_file_path = Path(src, "input.txt")
+input_file_path = Path(src, "09.txt")
 
 import numpy as np
 
@@ -19,7 +19,7 @@ D 10
 L 25
 U 20"""
 
-def part1(input):
+def part2(input):
     tail_to_head_vec = [np.array([0, 0], dtype=float) for _ in range(10)]
     unique_places_visited = set()
     unique_places_visited.add(tuple(tail_to_head_vec[-1]))
@@ -50,4 +50,4 @@ if __name__ == "__main__":
         with open(input_file_path) as f:
             for line in f.readlines():
                 input.append([x for x in line.strip().split(' ')])
-    part1(input)
+    part2(input)
