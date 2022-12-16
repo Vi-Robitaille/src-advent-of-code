@@ -3,3 +3,4 @@ numpy
 pygame
 pyparsing
 scipy
+pyvista
