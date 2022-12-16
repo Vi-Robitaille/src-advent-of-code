@@ -8,10 +8,10 @@ input_file_path = Path(src, "input.txt")
 
 import numpy as np
 import numpy.typing as npt
-import pymesh
+import pyvista as pv
 import re
 
-EXAMPLE_MODE = True
+EXAMPLE_MODE = False
 example_answer = 0
 # example = """Sensor at x=8, y=7: closest beacon is at x=2, y=10"""
 example = """Sensor at x=2, y=18: closest beacon is at x=-2, y=15
@@ -32,15 +32,16 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3"""
 point_regex = re.compile(r'-?\d+')
 
 def part2(src):
-    for line in parse_input(src):
-        print(create_mesh(*line))
+    for sensor, beacon in parse_input(src):
+        print(f"[[{sensor[0]}, {sensor[1]}, 0], {taxicab_dist(sensor, beacon)}],")
+        # print(create_mesh(*line))
 
 def parse_input(src):
     for line in src:
         try:
             sensor_x, sensor_y, beacon_x, beacon_y = [int(x) for x in point_regex.findall(line)]
-            if EXAMPLE_MODE:
-                print(f"Sensor at x={sensor_x}, y={sensor_y}: closest beacon is at x={beacon_x}, y={beacon_y}")
+            # if EXAMPLE_MODE:
+            #     print(f"Sensor at x={sensor_x}, y={sensor_y}: closest beacon is at x={beacon_x}, y={beacon_y}")
             yield np.array([sensor_x, sensor_y]), np.array([beacon_x, beacon_y])
         except ValueError:
             print(f"Found too many number sets on this line: '{line}'")
@@ -64,13 +65,18 @@ def create_mesh(sensor: npt.ArrayLike, beacon: npt.ArrayLike):
     dist = taxicab_dist(sensor, beacon)
     ns = np.array([0, dist])
     ew = np.array([dist, 0])
-    mesh_data = np.array([
+    
+    tris = np.clip(np.array([[
         sensor + ns, # North 
         sensor + ew, # East
-        sensor - ns, # South
         sensor - ew, # Weast
-    ])
-    return pymesh.form_mesh(mesh_data)
+    ],[
+        sensor + ew, # East
+        sensor - ew, # Weast
+        sensor - ns, # South
+    ]]), 0, 4000000) # clip to 0-4000000 range
+    
+
 
 
 if __name__ == "__main__":
