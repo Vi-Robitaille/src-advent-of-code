@@ -8,8 +8,12 @@ input_file_path = Path(src, "input.txt")
 
 import numpy as np
 import numpy.typing as npt
-import pyvista as pv
 import re
+
+# I just found this
+# I love this library
+from shapely.ops import unary_union, clip_by_rect
+from shapely.geometry import Polygon
 
 EXAMPLE_MODE = False
 example_answer = 0
@@ -32,17 +36,20 @@ Sensor at x=20, y=1: closest beacon is at x=15, y=3"""
 point_regex = re.compile(r'-?\d+')
 
 def part2(src):
-    for sensor, beacon in parse_input(src):
-        print(f"[[{sensor[0]}, {sensor[1]}, 0], {taxicab_dist(sensor, beacon)}],")
-        # print(create_mesh(*line))
+    poly = Polygon()
+    for sensor_x, sensor_y, beacon_x, beacon_y in parse_input(src):
+        poly = intersect(poly, sensor_x, sensor_y, beacon_x, beacon_y)
+    sol = clip_by_rect(poly, 0, 0, 4_000_000, 4_000_000).interiors[0]
+    x, y = map(round, sol.centroid.coords[:][0])
+    print(f"Found at x: {x}, y: {y} - {x * 4_000_000 + y}")
 
 def parse_input(src):
     for line in src:
         try:
             sensor_x, sensor_y, beacon_x, beacon_y = [int(x) for x in point_regex.findall(line)]
-            # if EXAMPLE_MODE:
-            #     print(f"Sensor at x={sensor_x}, y={sensor_y}: closest beacon is at x={beacon_x}, y={beacon_y}")
-            yield np.array([sensor_x, sensor_y]), np.array([beacon_x, beacon_y])
+            if EXAMPLE_MODE:
+                print(f"Sensor at x={sensor_x}, y={sensor_y}: closest beacon is at x={beacon_x}, y={beacon_y}")
+            yield sensor_x, sensor_y, beacon_x, beacon_y
         except ValueError:
             print(f"Found too many number sets on this line: '{line}'")
             quit()
@@ -50,34 +57,14 @@ def parse_input(src):
 def taxicab_dist(a: npt.ArrayLike, b: npt.ArrayLike) -> int:
     return np.abs(a - b).sum()
 
-def dist_to_y(a: npt.ArrayLike, y) -> int:
-    return taxicab_dist(np.array([0, y]), np.array([0, a[1]]))
-
-def intersect(a, b):
-    """Checks if two shapes intersect"""
-    pass
-
-def create_mesh(sensor: npt.ArrayLike, beacon: npt.ArrayLike):
-    """Turn a sensor/beacon pair into a 'rect' like object
-    :rtype: 
-    :return: 
-    """
-    dist = taxicab_dist(sensor, beacon)
-    ns = np.array([0, dist])
-    ew = np.array([dist, 0])
-    
-    tris = np.clip(np.array([[
-        sensor + ns, # North 
-        sensor + ew, # East
-        sensor - ew, # Weast
-    ],[
-        sensor + ew, # East
-        sensor - ew, # Weast
-        sensor - ns, # South
-    ]]), 0, 4000000) # clip to 0-4000000 range
-    
-
-
+def intersect(poly, sensor_x, sensor_y, beacon_x, beacon_y):
+    """hoho i KNEW this could be done via GEOMETRY"""
+    dist = taxicab_dist(np.array([sensor_x, sensor_y]), np.array([beacon_x, beacon_y]))
+    return unary_union([
+        poly, Polygon(
+            [(sensor_x, sensor_y + dist), (sensor_x - dist, sensor_y), (sensor_x, sensor_y - dist), (sensor_x + dist, sensor_y)]
+        )
+    ])
 
 if __name__ == "__main__":
     if EXAMPLE_MODE:
