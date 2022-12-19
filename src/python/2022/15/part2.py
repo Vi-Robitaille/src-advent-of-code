@@ -17,7 +17,6 @@ from shapely.geometry import Polygon
 
 EXAMPLE_MODE = False
 example_answer = 0
-# example = """Sensor at x=8, y=7: closest beacon is at x=2, y=10"""
 example = """Sensor at x=2, y=18: closest beacon is at x=-2, y=15
 Sensor at x=9, y=16: closest beacon is at x=10, y=16
 Sensor at x=13, y=2: closest beacon is at x=15, y=3
