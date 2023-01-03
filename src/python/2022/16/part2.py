@@ -1,6 +1,7 @@
 # Quality of life imports
 from pathlib import Path
-from sys import modules
+from sys import modules, path
+
 
 # Quality of life, define the input file location
 src = Path(modules['__main__'].__file__).resolve().parent
@@ -9,7 +10,11 @@ input_file_path = Path(src, "input.txt")
 import re
 from collections import defaultdict
 from functools import lru_cache
-import time
+
+
+helper_location = Path(src, "..", "..", "helpers")
+path.insert(1, helper_location.as_posix())
+from timer import time_func
 
 #
 # So it seems I made a version of this algorithm without knowing it existed for part 1
@@ -35,14 +40,16 @@ Valve HH has flow rate=22; tunnel leads to valve GG
 Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II"""
 
+starting_node = 'AA'
 bitmask = {}
+nodes = {'nodes_seen': [starting_node]}
 
 def parse_src(src):
     for line in src:
         w = tun_regex.match(line)
         yield w.group('tunnel'), w.group('rate'), w.group('connected').split(', ')
 
-def generate_max_flow_rates_from_node(current_node, time_left, nodes):
+def generate_max_flow_rates_from_node(current_node, time_left):
     res = []
     for node in nodes['nodes_seen']:
         amount = nodes[node]['rate'] * (time_left - nodes[current_node]['node_distances'][node] -1) # extra -1 for opening the valve
@@ -51,7 +58,7 @@ def generate_max_flow_rates_from_node(current_node, time_left, nodes):
     res.sort(key=lambda a: a[1], reverse=True)
     return res
 
-def generate_distance_from_start(node, nodes, depth=0):
+def generate_distance_from_start(node, depth=0):
     if nodes[node]['distance'] > depth:
         nodes[node]['distance'] = depth
     for child in nodes[node]['connected']:
@@ -59,7 +66,7 @@ def generate_distance_from_start(node, nodes, depth=0):
             continue
         if child not in nodes['nodes_seen']:
             nodes['nodes_seen'].append(child)
-        generate_distance_from_start(child, nodes, depth +1)
+        generate_distance_from_start(child, depth +1)
 
 # Yes this is basically a duplicate leave me aloooooone
 def generate_distance_from_node(node, node_store, nodes_actual, depth=0):
@@ -71,14 +78,14 @@ def generate_distance_from_node(node, node_store, nodes_actual, depth=0):
         node_store['nodes_seen'].append(child)
         generate_distance_from_node(child, node_store, nodes_actual, depth +1)
 
-def generate_inter_node_distances(nodes):
+def generate_inter_node_distances():
     for node in nodes:
         if node == 'nodes_seen': continue
         nodes[node]['node_distances'] = defaultdict(lambda: 1000)
         nodes[node]['node_distances']['nodes_seen'] = [node]
         generate_distance_from_node(node, nodes[node]['node_distances'], nodes)
             
-def generate_bitmask(nodes):
+def generate_bitmask():
     i = 0
     for node in nodes:
         if node == 'nodes_seen': continue
@@ -86,23 +93,20 @@ def generate_bitmask(nodes):
         bitmask[node] = 1 << i
         i += 1
 
-def filter_options(nodes, ans, current_node='AA', time_left=30, state=0, current_total_vented=0):
-    flows = generate_max_flow_rates_from_node(current_node, time_left, nodes)
+def filter_options(ans, current_node='AA', time_left=30, state=0, current_total_vented=0):
+    flows = generate_max_flow_rates_from_node(current_node, time_left)
     if len(flows) == 0: return
     for target, amount in filter(lambda x: time_left - nodes[current_node]['node_distances'][x[0]] -1 > 0 and not bitmask[x[0]] & state, flows):
         ans[state] = max(ans.get(state, 0), amount + current_total_vented)
         filter_options(
-            nodes, 
             ans,
             current_node=target, 
             time_left=time_left-nodes[current_node]['node_distances'][target] -1, 
             state= state | bitmask[target], 
             current_total_vented=current_total_vented+amount)
 
-def part2(src):
-    start_setup = time.time()
-    starting_node = 'AA'
-    nodes = {'nodes_seen': [starting_node]}
+@time_func
+def day16part2init(src):
     for tunnel, rate, connected in parse_src(src):
         nodes[tunnel] = {
             'rate': int(rate),
@@ -111,18 +115,21 @@ def part2(src):
             'closed': True
         }
         if EXAMPLE_MODE: print(f"Tunnel {tunnel} is connecteded to {connected} and has rate {rate}")
-    generate_distance_from_start(starting_node, nodes, depth=0)
-    generate_inter_node_distances(nodes)
-    generate_bitmask(nodes)
-    end_setup = time.time()
+    generate_distance_from_start(starting_node, depth=0)
+    generate_inter_node_distances()
+    generate_bitmask()
 
+@time_func
+def day16part2solve():
     answer = {}
-    filter_options(nodes, answer, time_left=26)
+    filter_options(answer, time_left=26)
     sol = max(v1 + v2 for k1, v1 in answer.items() for k2, v2 in answer.items() if not k1 & k2 and v1 + v2 > 2500)
     print(f"Part 2 answer: {sol}")
-    end_solve = time.time()
 
-    print(f"This solution took {end_setup - start_setup:.2f} seconds to setup\n\tand {end_solve - end_setup:.2f} seconds to solve.")
+def part2(src):
+    day16part2init(src)
+    day16part2solve()
+    
 
 if __name__ == "__main__":
     src = []
