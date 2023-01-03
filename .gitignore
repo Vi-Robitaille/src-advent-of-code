@@ -1,5 +1,6 @@
 # Ignore python envs
 **/env
+**/venv
 **/.idea
 **/__pycache__/
 # Generated files
@@ -9,3 +10,4 @@
 # its dependencies, but let the downstream crate decide.
 Cargo.lock
 test.py
+
