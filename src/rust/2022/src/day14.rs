@@ -1,8 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use std::{collections::HashSet, cmp::Ordering};
 use glam::IVec2;
-use tqdm::tqdm;
-use std::io::{stdin,stdout,Write};
+use tqdm::{Iter, Style};
 
 type Point = IVec2;
 
@@ -75,14 +74,11 @@ fn part_one(input: &HashSet<Point>) -> usize {
         IVec2 { x: 0, y: 1},  // Down 
     ];
 
-    for _ in tqdm(0..100000) {
+    for _ in (0..10000).tqdm().style(Style::Block) {
         let mut max_lifetime: i32 = 10000;
         let mut rest_flag: bool = false;
         let mut new_sand = sand_origin.clone();
         while max_lifetime > 0 && !rest_flag {
-            // let mut s = String::new();
-            // stdin().read_line(&mut s).expect("Did not enter a correct string");
-
             max_lifetime -= 1;
             if DEBUG { println!("Sand is at {:?}", new_sand); }
            
@@ -122,7 +118,7 @@ fn part_two(input: &HashSet<Point>) -> usize {
         IVec2 { x: 0, y: 1},  // Down 
     ];
 
-    for _ in Tqdm::new(0..100000) {
+    for _ in (0..50000).tqdm().style(Style::Block) {
         let mut max_lifetime: i32 = 10000;
         let mut rest_flag: bool = false;
         let mut new_sand: Point = sand_origin.clone();
@@ -135,7 +131,7 @@ fn part_two(input: &HashSet<Point>) -> usize {
                 .into_iter()
                 .filter(|f| {
                     !local_hash.contains(&(new_sand + *f))
-                }).collect::<Vec<Point>>().pop() 
+                }).collect::<Vec<Point>>().pop()
             {
                 new_sand = new_sand + new_position;
                 if DEBUG { println!(" - moving to x: {:?}, y: {:?}", new_sand.x, new_sand.y); }
@@ -146,7 +142,7 @@ fn part_two(input: &HashSet<Point>) -> usize {
                 if DEBUG { println!(" - adding sand at x: {:?}, y: {:?}", new_sand.x, new_sand.y); }
             }
 
-            if new_sand.y >= floor_position { 
+            if new_sand.y >= floor_position { /* is it really advent of code if you dont bodge pt 2? */
                 // if we reach here this means we have no available spots left
                 local_hash.insert(new_sand);
                 rest_flag = true;

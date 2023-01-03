@@ -15,4 +15,4 @@ regex = "*"
 lazy_static = "*"
 glam = "*"
 priority-queue = "*"
-tqdm = "*"
+tqdm = { path = "crates/tqdm" }
