@@ -1,9 +1,9 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
-use std::collections::HashMap;
 use lazy_static::lazy_static;
-use regex::Regex;
 use prime_factorization::Factorization;
+use regex::Regex;
+use std::collections::HashMap;
 
 /// Try using nom later
 lazy_static! {
@@ -13,7 +13,7 @@ lazy_static! {
 #[aoc_generator(day8)]
 fn parse_input_day1(input: &str) -> (String, HashMap<String, Node>) {
     let mut inp_iter = input.lines();
-    
+
     let key = inp_iter.next().unwrap().to_owned();
     let _ = inp_iter.next();
 
@@ -23,7 +23,13 @@ fn parse_input_day1(input: &str) -> (String, HashMap<String, Node>) {
             let node_key = node_iter.next().unwrap().as_str().to_string();
             let node_l = node_iter.next().unwrap().as_str().to_string();
             let node_r = node_iter.next().unwrap().as_str().to_string();
-            (node_key, Node {l: node_l, r: node_r})
+            (
+                node_key,
+                Node {
+                    l: node_l,
+                    r: node_r,
+                },
+            )
         })
         .collect();
 
@@ -47,10 +53,10 @@ fn part_one(input: &(String, HashMap<String, Node>)) -> usize {
         match steps.next().unwrap() {
             'R' => {
                 current_node = &node.r;
-            },
+            }
             'L' => {
                 current_node = &node.l;
-            },
+            }
             _ => panic!("Bad character."),
         }
         iterations += 1;
@@ -61,7 +67,9 @@ fn part_one(input: &(String, HashMap<String, Node>)) -> usize {
 
 #[aoc(day8, part2)]
 fn part_two(input: &(String, HashMap<String, Node>)) -> usize {
-    let starting_nodes: Vec<String> = input.1.keys()
+    let starting_nodes: Vec<String> = input
+        .1
+        .keys()
         .filter(|&a| a.ends_with("A"))
         .map(|a| a.clone())
         .collect();
@@ -75,16 +83,21 @@ fn part_two(input: &(String, HashMap<String, Node>)) -> usize {
         for (&k, v) in f.iter().counts() {
             result
                 .entry(k)
-                .and_modify(|val| if v > *val { *val = v })
+                .and_modify(|val| {
+                    if v > *val {
+                        *val = v
+                    }
+                })
                 .or_insert(v);
         }
     }
     println!("{:?}", result);
 
-    result.iter().map(|(k, v)| {
-            *k as usize
-        })
-        .reduce(|a, b| a * b).unwrap()
+    result
+        .iter()
+        .map(|(k, v)| *k as usize)
+        .reduce(|a, b| a * b)
+        .unwrap()
 }
 
 fn find_loops(starting_node: &str, steps: String, hm: &HashMap<String, Node>) -> usize {
@@ -102,10 +115,10 @@ fn find_loops(starting_node: &str, steps: String, hm: &HashMap<String, Node>) ->
         match steps.next().unwrap() {
             'R' => {
                 current_node = &node.r;
-            },
+            }
             'L' => {
                 current_node = &node.l;
-            },
+            }
             _ => panic!("Bad character."),
         }
         start_to_z_term += 1;
@@ -116,5 +129,5 @@ fn find_loops(starting_node: &str, steps: String, hm: &HashMap<String, Node>) ->
 
 struct Node {
     r: String,
-    l: String
+    l: String,
 }

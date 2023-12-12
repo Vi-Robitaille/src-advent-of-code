@@ -1,20 +1,19 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use std::collections::HashMap;
 use itertools::Itertools;
-use std::thread::{self, JoinHandle};
-use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 use std::sync::mpsc::channel;
+use std::sync::{Arc, Mutex};
+use std::thread::{self, JoinHandle};
 
 ///
 /// dest source size
 /// 50   98     2
-/// 
+///
 /// 98 -> 50
 /// 99 -> 51
-/// 
+///
 
 /// res = value - (dest - source) if (source..source + size).contains(value) else value
-
 
 #[derive(Clone)]
 struct RangeMap {
@@ -29,11 +28,10 @@ impl RangeMap {
         match self.range.contains(value) {
             //           50           98       50          98
             true => Some(value + (self.dest - self.src)),
-            false => None
+            false => None,
         }
     }
 }
-
 
 #[derive(PartialEq, Eq, Hash, Clone)]
 enum Mappings {
@@ -57,7 +55,7 @@ impl Mappings {
             &Mappings::Light => Mappings::Temperature,
             &Mappings::Temperature => Mappings::Humidity,
             &Mappings::Humidity => Mappings::Location,
-            _ => panic!("OH NO YOU ASKED FOR A `Location`")
+            _ => panic!("OH NO YOU ASKED FOR A `Location`"),
         }
     }
 }
@@ -93,7 +91,6 @@ impl ToString for Mappings {
     }
 }
 
-
 #[aoc_generator(day5)]
 fn parse_input_day1(input: &str) -> (Vec<isize>, HashMap<Mappings, Vec<RangeMap>>) {
     let banks = input.split("\n\n").collect::<Vec<&str>>();
@@ -111,14 +108,21 @@ fn parse_input_day1(input: &str) -> (Vec<isize>, HashMap<Mappings, Vec<RangeMap>
         let mut it = i.lines().into_iter();
 
         let title = it
-            .next().unwrap().split(' ')
-            .next().unwrap().split('-')
-            .nth(2).unwrap();
+            .next()
+            .unwrap()
+            .split(' ')
+            .next()
+            .unwrap()
+            .split('-')
+            .nth(2)
+            .unwrap();
         let mapping_id = Mappings::from(title);
-        
-        let mappings = it.map(|j| {
+
+        let mappings = it
+            .map(|j| {
                 let mappings = j
-                    .split(' ').map(|x| x.parse::<isize>().unwrap())
+                    .split(' ')
+                    .map(|x| x.parse::<isize>().unwrap())
                     .take(3)
                     .collect::<Vec<isize>>();
 
@@ -149,12 +153,13 @@ fn part_two(input: &(Vec<isize>, HashMap<Mappings, Vec<RangeMap>>)) -> isize {
     let smallest_seed = Arc::new(Mutex::new(isize::MAX));
     let hm = Arc::new(input.1.clone());
     println!("input.0 is {} elements long", input.0.len());
-    let seed_list = input.0
+    let seed_list = input
+        .0
         .windows(2)
         .step_by(2)
-        .map(|x| x[0]..x[0] +x[1])
+        .map(|x| x[0]..x[0] + x[1])
         .collect::<Vec<std::ops::Range<isize>>>();
-    
+
     let num_threads = seed_list.len();
 
     // let (tx, rx) = channel();
@@ -181,9 +186,9 @@ fn part_two(input: &(Vec<isize>, HashMap<Mappings, Vec<RangeMap>>)) -> isize {
     ans
 }
 
-fn compare_seeds<'a, I>(seed_list: I, hm: &HashMap<Mappings, Vec<RangeMap>>) -> isize 
+fn compare_seeds<'a, I>(seed_list: I, hm: &HashMap<Mappings, Vec<RangeMap>>) -> isize
 where
-    I: Iterator<Item = &'a isize>
+    I: Iterator<Item = &'a isize>,
 {
     let mut smallest_seed = isize::MAX;
     for seed in seed_list {
@@ -200,7 +205,7 @@ where
                 }
             }
             if current_map == Mappings::Location {
-                break
+                break;
             }
         }
         // println!("Evaluating {} and {} for smallest seed", smallest_seed, seed);
@@ -211,11 +216,10 @@ where
 }
 
 fn compare_seeds_thread(
-    seed_list: std::ops::Range<isize>, 
-    hm: Arc<HashMap<Mappings, Vec<RangeMap>>>, 
-    smallest_seed: Arc<Mutex<isize>>
-    ) 
-{
+    seed_list: std::ops::Range<isize>,
+    hm: Arc<HashMap<Mappings, Vec<RangeMap>>>,
+    smallest_seed: Arc<Mutex<isize>>,
+) {
     // println!("Starting a thread");
     for seed in seed_list {
         // println!("Seed is: {}", seed);
@@ -232,7 +236,7 @@ fn compare_seeds_thread(
                 }
             }
             if current_map == Mappings::Location {
-                break
+                break;
             }
         }
         let mut smallest_seed = smallest_seed.lock().unwrap();

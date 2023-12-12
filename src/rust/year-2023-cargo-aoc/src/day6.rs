@@ -12,10 +12,14 @@ lazy_static! {
 //                                        Race time          Distance
 fn parse_input_day1(input: &str) -> (Vec<usize>, Vec<usize>) {
     let mut inp_iter = input.lines();
-    let race_times = NUMERAL.find_iter(inp_iter.next().unwrap())
-        .map(|c| c.as_str().parse::<usize>().unwrap()).collect::<Vec<usize>>();
-    let distances = NUMERAL.find_iter(inp_iter.next().unwrap())
-        .map(|c| c.as_str().parse::<usize>().unwrap()).collect::<Vec<usize>>();
+    let race_times = NUMERAL
+        .find_iter(inp_iter.next().unwrap())
+        .map(|c| c.as_str().parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
+    let distances = NUMERAL
+        .find_iter(inp_iter.next().unwrap())
+        .map(|c| c.as_str().parse::<usize>().unwrap())
+        .collect::<Vec<usize>>();
     (race_times, distances)
 }
 
@@ -27,14 +31,27 @@ fn part_one(input: &(Vec<usize>, Vec<usize>)) -> usize {
                 .filter(|s| is_a_win(s.clone(), race_time, record_distance))
                 .count()
         })
-        .reduce(|a, b| a * b).unwrap()
+        .reduce(|a, b| a * b)
+        .unwrap()
 }
 
 #[aoc(day6, part2)]
 fn part_two(input: &(Vec<usize>, Vec<usize>)) -> usize {
-    let race_time = input.0.iter().fold("".to_string(), |acc, x| acc + &x.to_string()).parse::<usize>().unwrap();
-    let race_dist = input.1.iter().fold("".to_string(), |acc, x| acc + &x.to_string()).parse::<usize>().unwrap();
-    (0..race_time).filter(|s| is_a_win(s.clone(), race_time, race_dist)).count()
+    let race_time = input
+        .0
+        .iter()
+        .fold("".to_string(), |acc, x| acc + &x.to_string())
+        .parse::<usize>()
+        .unwrap();
+    let race_dist = input
+        .1
+        .iter()
+        .fold("".to_string(), |acc, x| acc + &x.to_string())
+        .parse::<usize>()
+        .unwrap();
+    (0..race_time)
+        .filter(|s| is_a_win(s.clone(), race_time, race_dist))
+        .count()
 }
 
 fn is_a_win(hold_time: usize, race_time_limit: usize, record_distance: usize) -> bool {

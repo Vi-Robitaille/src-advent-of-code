@@ -10,7 +10,13 @@ fn parse_input_day1(input: &str) -> Vec<Hand> {
         .lines()
         .map(|x| {
             let mut pair = x.split(' ').take(2);
-            let lhs: [char; 5] = pair.next().unwrap().chars().collect::<Vec<char>>().try_into().unwrap();
+            let lhs: [char; 5] = pair
+                .next()
+                .unwrap()
+                .chars()
+                .collect::<Vec<char>>()
+                .try_into()
+                .unwrap();
             let rhs: usize = pair.next().unwrap().parse::<usize>().unwrap();
 
             Hand::new(lhs, rhs)
@@ -22,11 +28,10 @@ fn parse_input_day1(input: &str) -> Vec<Hand> {
 fn part_one(input: &Vec<Hand>) -> usize {
     let mut input = input.clone();
     input.sort();
-    input.iter()
+    input
+        .iter()
         .enumerate()
-        .map(|(i, e)| {
-            (i+1) * e.bid
-        })
+        .map(|(i, e)| (i + 1) * e.bid)
         .fold(0, |a, b| a + b)
 }
 
@@ -59,7 +64,8 @@ impl Hand {
         let mut c2 = c.clone();
         c2.sort();
 
-        let mut character_counts: Vec<usize> = c2.iter()
+        let mut character_counts: Vec<usize> = c2
+            .iter()
             .group_by(|&x| x)
             .into_iter()
             .map(|(_k, v)| v.count())
@@ -67,25 +73,33 @@ impl Hand {
 
         character_counts.sort();
 
-        let cards: [Card; 5] = c.iter()
+        let cards: [Card; 5] = c
+            .iter()
             .map(|x| Card::from(*x))
-            .collect::<Vec<Card>>().try_into().unwrap();
+            .collect::<Vec<Card>>()
+            .try_into()
+            .unwrap();
 
         // println!("{:?} -> {:?}", c2, character_counts);
 
         let power = if character_counts.len() == 1 {
             PowerStates::FiveOfAKind
         } else {
-            match character_counts.iter().rev().take(2).collect_tuple::<(&usize, &usize)>() {
-               x if x == Some((&4, &1)) => PowerStates::FourOfAKind,
-               x if x == Some((&3, &2)) => PowerStates::FullHouse,
-               x if x == Some((&3, &1)) => PowerStates::ThreeOfAKind,
-               x if x == Some((&2, &2)) => PowerStates::TwoPair,
-               x if x == Some((&2, &1)) => PowerStates::OnePair,
-               x if x == Some((&1, &1)) => PowerStates::HighCard,
-               Some(_) => panic!(),
-               None => panic!(),
-           }
+            match character_counts
+                .iter()
+                .rev()
+                .take(2)
+                .collect_tuple::<(&usize, &usize)>()
+            {
+                x if x == Some((&4, &1)) => PowerStates::FourOfAKind,
+                x if x == Some((&3, &2)) => PowerStates::FullHouse,
+                x if x == Some((&3, &1)) => PowerStates::ThreeOfAKind,
+                x if x == Some((&2, &2)) => PowerStates::TwoPair,
+                x if x == Some((&2, &1)) => PowerStates::OnePair,
+                x if x == Some((&1, &1)) => PowerStates::HighCard,
+                Some(_) => panic!(),
+                None => panic!(),
+            }
         };
         Hand { cards, bid, power }
     }
@@ -93,14 +107,14 @@ impl Hand {
 
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq)]
 enum PowerStates {
-    FiveOfAKind  = 6,
-    FourOfAKind  = 5,
-    FullHouse    = 4,
+    FiveOfAKind = 6,
+    FourOfAKind = 5,
+    FullHouse = 4,
     ThreeOfAKind = 3,
-    TwoPair      = 2,
-    OnePair      = 1,
-    HighCard     = 0,
-} 
+    TwoPair = 2,
+    OnePair = 1,
+    HighCard = 0,
+}
 
 impl From<char> for Card {
     fn from(value: char) -> Self {
@@ -119,11 +133,10 @@ impl From<char> for Card {
             '3' => Card::Three,
             '2' => Card::Two,
             '1' => Card::One,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 }
-
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, PartialOrd, Ord)]
 enum Card {
