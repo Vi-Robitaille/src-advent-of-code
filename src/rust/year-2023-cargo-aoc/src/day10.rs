@@ -1,11 +1,12 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
+use geo::{Contains, Intersects};
+use geo::{coord, Coord, Line};
 use itertools::Itertools;
 use std::ops::Range;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
-use geo::{LineString, Polygon, coord, Coord};
-use geo::{ConcaveHull, Contains};
+
 
 const N: usize = 0;
 const E: usize = 1;
@@ -90,7 +91,7 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
         })
         .collect_vec();
 
-    // 
+    //
 
     let start_node = Node {
         x: start[0].0,
@@ -99,7 +100,7 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
     let grid_arc: Arc<Vec<Vec<char>>> = Arc::new(input.clone());
 
     let start_nodes_adjacent = get_adjacent(&start_node, &grid_arc).unwrap();
-    let mut handles: Vec<JoinHandle<Option<Vec<Coord<f32>>>>> = vec![];
+    let mut handles: Vec<JoinHandle<Option<Vec<Line>>>> = vec![];
 
     for node in start_nodes_adjacent.iter() {
         // Values passed to the thread
@@ -107,44 +108,60 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
         let starting_node = start_node;
         let mut node = node.clone();
 
+        // The difference between part 1 and part 2 is that we return 
+        // the path as a series of Lines we then use to test for intersections
         let h = thread::spawn(move || {
-            let mut resulting_points: Vec<Coord<f32>> = vec![start_node.as_coord()];
+            let mut resulting_points: Vec<Line> = vec![];
             let mut previous_node = starting_node.clone();
+            let mut previous_corner = starting_node.clone();
+
             while node != starting_node {
-                let next_node = step(&node, &previous_node, &grid_arc);
-                if let Ok(next_node) = next_node {
+                if let Ok(next_node) = step(&node, &previous_node, &grid_arc) {
                     previous_node = node;
                     node = next_node;
                 } else {
                     return None;
                 }
-                
+
                 if node.is_corner(&grid_arc) {
-                    resulting_points.push(node.as_coord());
+                    resulting_points.push(Line::new(previous_corner.as_coord(), node.as_coord()));
+                    previous_corner = node;
                 }
             }
-            
-            resulting_points.push(start_node.as_coord());
+
+            resulting_points.push(Line::new(
+                previous_corner.as_coord(),
+                starting_node.as_coord(),
+            ));
             Some(resulting_points)
         });
         handles.push(h);
     }
 
+
+    let mut contained: usize = 0;
     for j in handles {
         let r = j.join();
         if let Ok(Some(path)) = r {
-            let poly = Polygon::new(LineString::from(path), vec![]).concave_hull(0.0001);
-
-            let coords = get_all_ground_nodes_as_coords(&grid_arc);
-            let s = coords
-                .iter()
-                .filter(|&c| poly.contains(c))
+            // To test if the point is inside or outside the path we evaluate 
+            // the number of collisions with paths
+            // We may need to subtract the number of contained Lines
+            let ground_points = get_all_ground_nodes(&grid_arc);
+            
+            contained = ground_points.iter()
+                .filter(|&&p| {
+                    let test_line = Line::new(coord! { x: 0.0, y: p.y}, p);
+                    path.iter()
+                        .filter(|&&l| l.intersects(&test_line) && !test_line.contains(&l))
+                        .count() % 2 == 1
+                })
                 .count();
-            println!("this loop contains {s:?} elements");
-            println!("{:?}", coords.len())
+            if contained > 0 {
+                break;
+            }
         }
     }
-    0
+    contained
 }
 
 fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Result<Vec<Node>, ()> {
@@ -224,18 +241,92 @@ impl Node {
     fn is_valid(self, x_bounds: &Range<usize>, y_bounds: &Range<usize>) -> bool {
         x_bounds.contains(&self.x) && y_bounds.contains(&self.y)
     }
-
-    fn as_coord(self) -> Coord<f32> {
+    fn as_coord(self) -> Coord<f64> {
         coord! {
-            x: self.x as f32,
-            y: self.y as f32,
+            x: self.x as f64,
+            y: self.y as f64,
         }
     }
     fn is_corner(&self, grid: &Arc<Vec<Vec<char>>>) -> bool {
-        match grid[self.y][self.x] { 
+        match grid[self.y][self.x] {
             'L' | 'J' | '7' | 'F' => true,
-            _ => false
+            _ => false,
         }
+    }
+}
+
+#[allow(unused)]
+struct Span {
+    start: Node,
+    end: Node,
+}
+
+/// in all of these functions lhs is assumed to be the entire
+/// width or height of the area being evaluated
+impl Span {
+    ///
+    /// This tests if a given span is fully within this span
+    ///
+    /// A: (1, 1) -> (1, 7)
+    /// B: (0, 4) -> (10, 4)
+    ///
+    /// C: (0, 9) -> (10, 0)
+    /// D: (6, 9) -> (9, 9)
+    ///
+    /// A -> B : False
+    /// C -> D : True
+    ///
+    /// ...........
+    /// .B-------7.
+    /// .BF-----7|.
+    /// .B|.....||.
+    /// AAAAAAAAAAA
+    /// .BL-7.F-J|.
+    /// .B..|.|..|.
+    /// CBCCCCDDDDC
+    /// ...........
+    ///
+    #[allow(unused)]
+    fn contains(&self, rhs: &Self) -> bool {
+        // These should be zero if they are colinear
+        let same_start_x = self.start.x.checked_sub(rhs.start.x);
+        let same_end_x = self.end.x.checked_sub(rhs.end.x);
+        let same_start_y = self.start.y.checked_sub(rhs.start.y);
+        let same_end_y = self.end.y.checked_sub(rhs.end.y);
+
+        // Evaluate the differences between the lines
+        match (same_start_x, same_start_y, same_end_x, same_end_y) {
+            // both X are zero, a vertical line and they are colinear
+            (Some(0), _, Some(0), _) => {
+                self.start.y <= rhs.start.y
+                    && self.start.y <= rhs.end.y
+                    && self.end.y >= rhs.start.y
+                    && self.end.y >= rhs.end.y
+            }
+            // both Y are zero, a horizontal line and they are colinear
+            (_, Some(0), _, Some(0)) => {
+                self.start.x <= rhs.start.x
+                    && self.start.x <= rhs.end.x
+                    && self.end.x >= rhs.start.x
+                    && self.end.x >= rhs.end.x
+            }
+            _ => return false,
+        }
+    }
+
+    /// Tests if two spans intersect
+    #[allow(unused)]
+    fn intersection(&self, rhs: &Self) -> bool {
+        if self.contains(rhs) {
+            return false;
+        }
+
+        let axy = (self.start.x..self.end.x, self.start.y..self.end.y);
+        let bxy = (rhs.start.x..rhs.end.x, rhs.start.y..rhs.end.y);
+
+        // its at this point that i'm just going to abandon this
+        // and use rust
+        false
     }
 }
 
@@ -251,18 +342,17 @@ fn step(current_node: &Node, previous_node: &Node, grid: &Arc<Vec<Vec<char>>>) -
     Err(())
 }
 
-fn get_all_ground_nodes_as_coords(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f32>> {
-    let mut res: Vec<Coord<f32>> = vec![];
+fn get_all_ground_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
+    let mut res: Vec<Coord<f64>> = vec![];
     for (x, i) in grid.iter().enumerate() {
         for (y, e) in i.iter().enumerate() {
             if e == &'.' {
-                res.push(coord! {x: x as f32, y: y as f32 });
+                res.push(Node { x, y }.as_coord());
             }
         }
     }
     res
 }
-
 
 // ...........
 // .S-------7.
