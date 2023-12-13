@@ -19,28 +19,28 @@ fn parse_input_day1(input: &str) -> String {
     // pls dont look
 
     let padding: String = ['.'; MAX_SIZE].iter().collect();
-    let mutated = [
+    
+    [
         padding.clone(),
         String::from("\n"),
         input.to_string(),
         String::from("\n"),
         padding,
     ]
-    .concat();
-    mutated
+    .concat()
 }
 
 #[aoc(day3, part1)]
-fn part_one(input: &String) -> usize {
+fn part_one(input: &str) -> usize {
     input
         .lines()
         .collect::<Vec<&str>>()
         .windows(3)
-        .map(|x| {
+        .flat_map(|x| {
             let groupings = x[1]
                 .chars()
                 .enumerate()
-                .group_by(|(_i, e)| e.is_digit(10))
+                .group_by(|(_i, e)| e.is_ascii_digit())
                 .into_iter()
                 .filter_map(|(key, group)| key.then(|| group.collect()))
                 .collect::<Vec<Vec<(usize, char)>>>();
@@ -70,10 +70,10 @@ fn part_one(input: &String) -> usize {
                     };
 
                     if (1..MAX_SIZE - 1).contains(&first) {
-                        first = first - 1;
+                        first -= 1;
                     }
                     if (1..MAX_SIZE - 1).contains(&last) {
-                        last = last + 1;
+                        last += 1;
                     }
 
                     let a = x[0][first..last].chars().clone();
@@ -81,32 +81,31 @@ fn part_one(input: &String) -> usize {
                     let c = x[2][first..last].chars().clone();
 
                     let is_near_symbol = chain(a, chain(b, c)).any(|f| match f {
-                        i if i.is_digit(10) => false,
+                        i if i.is_ascii_digit() => false,
                         i if i == '.' => false,
                         _ => true,
                     });
-                    is_near_symbol.then(|| numeral)
+                    is_near_symbol.then_some(numeral)
                 })
                 .collect::<Vec<usize>>()
         })
-        .flatten()
         .sum()
 }
 
 #[aoc(day3, part2)]
-fn part_two(input: &String) -> usize {
+fn part_two(input: &str) -> usize {
     let r = input
         .lines()
         .enumerate()
         .collect::<Vec<(usize, &str)>>()
         .windows(3)
-        .map(|x| {
+        .flat_map(|x| {
             // (Line_id, line)
             let groupings = x[1]
                 .1
                 .chars()
                 .enumerate()
-                .group_by(|(_i, e)| e.is_digit(10))
+                .group_by(|(_i, e)| e.is_ascii_digit())
                 .into_iter()
                 .filter_map(|(key, group)| key.then(|| group.collect()))
                 .collect::<Vec<Vec<(usize, char)>>>();
@@ -122,7 +121,7 @@ fn part_two(input: &String) -> usize {
                     // The top left coord of the current zone of influence
                     let mut zero_x = m.first().unwrap().0;
                     if zero_x == 0 {
-                        zero_x = zero_x + 1;
+                        zero_x += 1;
                     }
                     let zero_y = x[0].0;
 
@@ -148,10 +147,10 @@ fn part_two(input: &String) -> usize {
                     };
 
                     if (1..MAX_SIZE - 1).contains(&first) {
-                        first = first - 1;
+                        first -= 1;
                     }
                     if (1..MAX_SIZE - 1).contains(&last) {
-                        last = last + 1;
+                        last += 1;
                     }
 
                     let positions = chain(
@@ -164,14 +163,13 @@ fn part_two(input: &String) -> usize {
                     .enumerate()
                     .filter_map(|(i, ch)| {
                         (ch == '*')
-                            .then(|| (zero_x + (i % last - first), zero_y + (i / last - first)))
+                            .then_some((zero_x + (i % last - first), zero_y + (i / last - first)))
                     })
                     .collect::<Vec<Point>>();
-                    (positions.len() > 0).then(|| (positions, numeral))
+                    (!positions.is_empty()).then_some((positions, numeral))
                 })
                 .collect::<Vec<(Vec<Point>, usize)>>()
         })
-        .flatten()
         .collect::<Vec<(Vec<Point>, usize)>>();
 
     let mut map: HashMap<(usize, usize), usize> = HashMap::new();

@@ -70,8 +70,8 @@ fn part_two(input: &(String, HashMap<String, Node>)) -> usize {
     let starting_nodes: Vec<String> = input
         .1
         .keys()
-        .filter(|&a| a.ends_with("A"))
-        .map(|a| a.clone())
+        .filter(|&a| a.ends_with('A'))
+        .cloned()
         .collect();
 
     // hashmap of <prime, times this prime has been seen>
@@ -94,8 +94,8 @@ fn part_two(input: &(String, HashMap<String, Node>)) -> usize {
     println!("{:?}", result);
 
     result
-        .iter()
-        .map(|(k, _v)| *k as usize)
+        .keys()
+        .map(|k| *k as usize)
         .reduce(|a, b| a * b)
         .unwrap()
 }
@@ -106,7 +106,7 @@ fn find_loops(starting_node: &str, steps: String, hm: &HashMap<String, Node>) ->
     let mut steps = steps.chars().cycle();
     let mut current_node = starting_node;
 
-    while !current_node.ends_with("Z") {
+    while !current_node.ends_with('Z') {
         let node = if let Some(node) = hm.get(current_node) {
             node
         } else {

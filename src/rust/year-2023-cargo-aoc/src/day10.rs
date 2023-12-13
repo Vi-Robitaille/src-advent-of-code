@@ -1,12 +1,11 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use geo::Intersects;
-use geo::{coord, Coord, Line};
+use geo::{Contains, Intersects};
+use geo::{coord, Coord, Line, Polygon, LineString};
 use itertools::Itertools;
 use std::ops::Range;
 use std::sync::Arc;
 use std::thread::{self, JoinHandle};
-
 
 const N: usize = 0;
 const E: usize = 1;
@@ -19,7 +18,7 @@ fn parse_input_day1(input: &str) -> Vec<Vec<char>> {
 }
 
 #[aoc(day10, part1)]
-fn part_one(input: &Vec<Vec<char>>) -> usize {
+fn part_one(input: &[Vec<char>]) -> usize {
     let start: Vec<(usize, usize)> = input
         .iter()
         .enumerate()
@@ -27,27 +26,27 @@ fn part_one(input: &Vec<Vec<char>>) -> usize {
             let r = e
                 .iter()
                 .enumerate()
-                .filter_map(|(j, x)| (*x == 'S').then(|| j))
+                .filter_map(|(j, x)| (*x == 'S').then_some(j))
                 .collect_vec();
-            (r.len() > 0).then(|| (r[0], i))
+            (!r.is_empty()).then(|| (r[0], i))
         })
         .collect_vec();
     let start_node = Node {
         x: start[0].0,
         y: start[0].1,
     };
-    let grid_arc: Arc<Vec<Vec<char>>> = Arc::new(input.clone());
+    let grid_arc: Arc<Vec<Vec<char>>> = Arc::new(input.to_owned());
 
-    let start_nodes_adjacent = get_adjacent(&start_node, &grid_arc).unwrap();
+    let start_nodes_adjacent = get_adjacent(&start_node, &grid_arc);
     let mut handles: Vec<JoinHandle<usize>> = vec![];
 
     for node in start_nodes_adjacent.iter() {
         let grid_arc: Arc<Vec<Vec<char>>> = Arc::clone(&grid_arc);
         let starting_node = start_node;
-        let mut node = node.clone();
+        let mut node = *node;
         let h = thread::spawn(move || {
             let mut path_len = 0;
-            let mut previous_node = starting_node.clone();
+            let mut previous_node = starting_node;
             while node != starting_node {
                 let next_node = step(&node, &previous_node, &grid_arc);
                 if let Ok(next_node) = next_node {
@@ -74,8 +73,20 @@ fn part_one(input: &Vec<Vec<char>>) -> usize {
     res.iter().last().unwrap().to_owned()
 }
 
+
+///
+/// You know when you've sunk a lot of time into a solution
+/// and you dont want to abandon it
+/// but it gets really gross
+/// and you keep pushing to make it work
+/// but its just not a great solution?
+/// 
+/// This is that
+/// 
+/// im not cleaning it.
+/// 
 #[aoc(day10, part2)]
-fn part_two(input: &Vec<Vec<char>>) -> usize {
+fn part_two(input: &[Vec<char>]) -> usize {
     // Same bullshit start finder, ya you can do it differently but
     //  its done this way. fight me.
     let start: Vec<(usize, usize)> = input
@@ -85,9 +96,9 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
             let r = e
                 .iter()
                 .enumerate()
-                .filter_map(|(j, x)| (*x == 'S').then(|| j))
+                .filter_map(|(j, x)| (*x == 'S').then_some(j))
                 .collect_vec();
-            (r.len() > 0).then(|| (r[0], i))
+            (!r.is_empty()).then(|| (r[0], i))
         })
         .collect_vec();
 
@@ -97,23 +108,23 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
         x: start[0].0,
         y: start[0].1,
     };
-    let grid_arc: Arc<Vec<Vec<char>>> = Arc::new(input.clone());
+    let grid_arc: Arc<Vec<Vec<char>>> = Arc::new(input.to_owned());
 
-    let start_nodes_adjacent = get_adjacent(&start_node, &grid_arc).unwrap();
-    let mut handles: Vec<JoinHandle<Option<Vec<Line>>>> = vec![];
+    let start_nodes_adjacent = get_adjacent(&start_node, &grid_arc);
+    let mut handles: Vec<JoinHandle<Option<LineString<f64>>>> = vec![];
 
     for node in start_nodes_adjacent.iter() {
         // Values passed to the thread
         let grid_arc: Arc<Vec<Vec<char>>> = Arc::clone(&grid_arc);
         let starting_node = start_node;
-        let mut node = node.clone();
+        let mut node = *node;
 
-        // The difference between part 1 and part 2 is that we return 
+        // The difference between part 1 and part 2 is that we return
         // the path as a series of Lines we then use to test for intersections
         let h = thread::spawn(move || {
-            let mut resulting_points: Vec<Line> = vec![];
-            let mut previous_node = starting_node.clone();
-            let mut previous_corner = starting_node.clone();
+            let mut resulting_points: Vec<Coord> = vec![];
+            let mut previous_node = starting_node;
+            let mut previous_corner = starting_node;
 
             while node != starting_node {
                 if let Ok(next_node) = step(&node, &previous_node, &grid_arc) {
@@ -122,72 +133,91 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
                 } else {
                     return None;
                 }
-
-                if node.is_corner(&grid_arc) {
-                    resulting_points.push(Line::new(previous_corner.as_coord(), node.as_coord()));
-                    previous_corner = node;
-                }
+                resulting_points.push(node.as_coord());
+                
             }
-
-            resulting_points.push(Line::new(
-                previous_corner.as_coord(),
-                starting_node.as_coord(),
-            ));
-            Some(resulting_points)
+            
+            resulting_points.push(starting_node.as_coord());
+            Some(LineString::new(resulting_points))
         });
         handles.push(h);
     }
 
+    solve_via_polygon(handles, &grid_arc)
+}
 
+
+type Yuck = Vec<JoinHandle<Option<Vec<Line>>>>;
+type YuckLineString = Vec<JoinHandle<Option<LineString<f64>>>>;
+type GridYuck = Arc<Vec<Vec<char>>>;
+///
+/// The print statements in this output a desmos formatted paste
+/// so you can toss it into a desmos graph to see how dumb i am
+/// 
+#[allow(unused)]
+fn solve_via_polygon(handles: YuckLineString, grid: &GridYuck) -> usize {
     let mut contained: usize = 0;
     for j in handles {
         let r = j.join();
         if let Ok(Some(path)) = r {
-            // To test if the point is inside or outside the path we evaluate 
+            // To test if the point is inside or outside the path we evaluate
             // the number of collisions with paths
             // We may need to subtract the number of contained Lines
-            let ground_points = get_all_ground_nodes(&grid_arc);
-            
-            contained = ground_points.iter()
-                .filter(|&&p| {
-                    // Add a slight offset to the endpoint since detecting overlaps is annoying
-                    // 1.7319 is the ratio of a triangle to have one angle at 30 deg
-                    let test_line = Line::new(p, coord! { x: -1.0, y: p.y - ((p.x + 1.0) / 1.7319)});
-                    let intersections = path.iter().filter(|l| {
-                            l.intersects(&test_line)
-                        })
-                        .count();
-                    intersections > 0 && intersections % 2 == 1
-                })
-                .map(|x| println!("({:?},{:?})", x.x, x.y))
+            let ground_points = get_all_nodes(grid);
+
+            let poly = Polygon::new(path, vec![]);
+
+            contained = ground_points
+                .iter()
+                .filter(|&&p| poly.contains(&p))
                 .count();
-            path.iter()
-                .for_each(|x| println!("((1-t){} + t{}, (1-t){} + t{})", x.start.x, x.end.x, x.start.y, x.end.y));
+
+            println!("Poly has {} points within", contained);
+
+            
+            // contained = ground_points
+            //     .iter()
+            //     .filter(|&&p| {
+            //         // Add a slight offset to the endpoint since detecting overlaps is annoying
+            //         // 1.7319 is the ratio of a triangle to have one angle at 30 deg
+            //         let test_line =
+            //             Line::new(p, coord! { x: -1.0, y: p.y - ((p.x + 1.0) / 1.7319)});
+            //         let intersections = path.iter().filter(|l| l.intersects(&test_line) && !l.intersects(&p)).count();
+            //         intersections > 0 && intersections % 2 == 1
+            //     })
+            //     .map(|x| println!("({:?},{:?})", x.x, x.y))
+            //     .count();
+            // path.iter().for_each(|x| {
+            //     println!(
+            //         "((1-t){} + t{}, (1-t){} + t{})",
+            //         x.start.x, x.end.x, x.start.y, x.end.y
+            //     )
+            // });
             println!("-------------")
         }
     }
     contained
 }
 
-fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Result<Vec<Node>, ()> {
+fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Vec<Node> {
     let x_bounds: Range<usize> = 0..grid[0].len();
     let y_bounds: Range<usize> = 0..grid.len();
     let nodes = [
-        Node { x: n.x, y: n.y - 1 }, // North
-        Node { x: n.x + 1, y: n.y }, // East
-        Node { x: n.x, y: n.y + 1 }, // South
-        Node { x: n.x - 1, y: n.y }, // West
+        n.get_north(&y_bounds), // North
+        n.get_east(&x_bounds),  // East
+        n.get_south(&y_bounds), // South
+        n.get_west(&x_bounds),  // West
     ];
 
     match PipeTypes::from((grid[n.y][n.x], nodes)) {
-        PipeTypes::Ground => return Err(()),
+        PipeTypes::Ground => vec![],
         PipeTypes::Start(a, b, c, d) => {
             let nodes = vec![a, b, c, d]
                 .iter()
-                .filter(|v| v.is_valid(&x_bounds, &y_bounds))
-                .map(|&v| v)
+                .flatten()
+                .cloned()
                 .collect_vec();
-            Ok(nodes)
+            nodes
         }
 
         PipeTypes::Vertical(a, b)
@@ -198,27 +228,27 @@ fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Result<Vec<Node>, ()> {
         | PipeTypes::SENinety(a, b) => {
             let nodes = vec![a, b]
                 .iter()
-                .filter(|v| v.is_valid(&x_bounds, &y_bounds))
-                .map(|&v| v)
+                .flatten()
+                .cloned()
                 .collect_vec();
-            Ok(nodes)
+            nodes
         }
     }
 }
 
 enum PipeTypes {
-    Vertical(Node, Node),
-    Horizontal(Node, Node),
-    NENinety(Node, Node),
-    NWNinety(Node, Node),
-    SWNinety(Node, Node),
-    SENinety(Node, Node),
+    Vertical(Option<Node>, Option<Node>),
+    Horizontal(Option<Node>, Option<Node>),
+    NENinety(Option<Node>, Option<Node>),
+    NWNinety(Option<Node>, Option<Node>),
+    SWNinety(Option<Node>, Option<Node>),
+    SENinety(Option<Node>, Option<Node>),
     Ground,
-    Start(Node, Node, Node, Node),
+    Start(Option<Node>, Option<Node>, Option<Node>, Option<Node>),
 }
 
-impl From<(char, [Node; 4])> for PipeTypes {
-    fn from(value: (char, [Node; 4])) -> Self {
+impl From<(char, [Option<Node>; 4])> for PipeTypes {
+    fn from(value: (char, [Option<Node>; 4])) -> Self {
         match value.0 {
             '|' => PipeTypes::Vertical(value.1[N], value.1[S]),
             '-' => PipeTypes::Horizontal(value.1[E], value.1[W]),
@@ -243,9 +273,6 @@ struct Node {
 }
 
 impl Node {
-    fn is_valid(self, x_bounds: &Range<usize>, y_bounds: &Range<usize>) -> bool {
-        x_bounds.contains(&self.x) && y_bounds.contains(&self.y)
-    }
     fn as_coord(self) -> Coord<f64> {
         coord! {
             x: self.x as f64,
@@ -253,10 +280,33 @@ impl Node {
         }
     }
     fn is_corner(&self, grid: &Arc<Vec<Vec<char>>>) -> bool {
-        match grid[self.y][self.x] {
-            'L' | 'J' | '7' | 'F' => true,
-            _ => false,
+        matches!(grid[self.y][self.x], 'L' | 'J' | '7' | 'F')
+    }
+    fn get_north(&self, _y_bounds: &Range<usize>) -> Option<Self> {
+        if let Some(y) = self.y.checked_sub(1) {
+            return Some(Node { x: self.x, y });
         }
+        None
+    }
+    fn get_east(&self, x_bounds: &Range<usize>) -> Option<Self> {
+        let x = self.x + 1;
+        if x_bounds.contains(&x) {
+            return Some(Node { x, y: self.y });
+        }
+        None
+    }
+    fn get_south(&self, y_bounds: &Range<usize>) -> Option<Self> {
+        let y = self.y + 1;
+        if y_bounds.contains(&y) {
+            return Some(Node { x: self.x, y });
+        }
+        None
+    }
+    fn get_west(&self, _x_bounds: &Range<usize>) -> Option<Self> {
+        if let Some(x) = self.x.checked_sub(1) {
+            return Some(Node { x, y: self.y });
+        }
+        None
     }
 }
 
@@ -315,7 +365,7 @@ impl Span {
                     && self.end.x >= rhs.start.x
                     && self.end.x >= rhs.end.x
             }
-            _ => return false,
+            _ => false,
         }
     }
 
@@ -338,22 +388,23 @@ impl Span {
 /// From any given spot there will be one valid direction to
 /// step towards if we know where we're coming from.
 fn step(current_node: &Node, previous_node: &Node, grid: &Arc<Vec<Vec<char>>>) -> Result<Node, ()> {
-    if let Ok(nodes) = get_adjacent(current_node, grid) {
-        let non_prev_nodes = nodes.iter().filter(|&x| x != previous_node).collect_vec();
-        if non_prev_nodes.len() == 1 {
-            return Ok(non_prev_nodes[0].clone());
-        }
+    let nodes = get_adjacent(current_node, grid);
+    if nodes.is_empty() {
+        return Err(());
+    }
+
+    let non_prev_nodes = nodes.iter().filter(|&x| x != previous_node).collect_vec();
+    if non_prev_nodes.len() == 1 {
+        return Ok(*non_prev_nodes[0]);
     }
     Err(())
 }
 
-fn get_all_ground_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
+fn get_all_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
     let mut res: Vec<Coord<f64>> = vec![];
     for (y, i) in grid.iter().enumerate() {
         for (x, e) in i.iter().enumerate() {
-            if e == &'.' {
-                res.push(Node { x, y }.as_coord());
-            }
+            res.push(Node { x, y }.as_coord());
         }
     }
     res
@@ -375,3 +426,65 @@ fn get_all_ground_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
 // if the intersection count is odd then we know its in the count
 // to do this we need to test if the line evaluating its position is coplanar with
 // a polygon face or evaluate the polygon from a non orthogonal direction
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &'static str = include_str!("../input/2023/day10.txt");
+    const TEST_INPUT_1: &'static str = include_str!("../input/2023/day10-test.txt");
+    const TEST_INPUT_2: &'static str = include_str!("../input/2023/day10-test2.txt");
+    const TEST_INPUT_3: &'static str = include_str!("../input/2023/day10-test3.txt");
+    const TEST_INPUT_4: &'static str = include_str!("../input/2023/day10-test4.txt");
+    const TEST_INPUT_5: &'static str = include_str!("../input/2023/day10-test5.txt");
+    const TEST_INPUT_6: &'static str = include_str!("../input/2023/day10-test6.txt");
+
+    #[test]
+    fn part_1_test_1() {
+        let inp = parse_input_day1(TEST_INPUT_1);
+        assert_eq!(part_one(&inp), 4)
+    }
+    #[test]
+    fn part_1_test_2() {
+        let inp = parse_input_day1(TEST_INPUT_2);
+        assert_eq!(part_one(&inp), 8)
+    }
+    
+    #[test]
+    fn part_1_input() {
+        let inp = parse_input_day1(INPUT);
+        assert_eq!(part_one(&inp), 6979)
+    }
+    
+    #[test]
+    fn part_2_sample_3() {
+        let inp = parse_input_day1(TEST_INPUT_3);
+        assert_eq!(part_two(&inp), 4)
+    }
+    
+    #[test]
+    fn part_2_sample_4() {
+        let inp = parse_input_day1(TEST_INPUT_4);
+        assert_eq!(part_two(&inp), 4)
+    }
+    
+    #[test]
+    fn part_2_sample_5() {
+        let inp = parse_input_day1(TEST_INPUT_5);
+        assert_eq!(part_two(&inp), 8)
+    }
+    
+    #[test]
+    fn part_2_sample_6() {
+        let inp = parse_input_day1(TEST_INPUT_6);
+        assert_eq!(part_two(&inp), 10)
+    }
+    
+    #[test]
+    fn part_2_input() {
+        let inp = parse_input_day1(INPUT);
+        assert_eq!(part_two(&inp), 443)
+    }
+}

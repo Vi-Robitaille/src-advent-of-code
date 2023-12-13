@@ -45,14 +45,14 @@ enum Mappings {
 
 impl Mappings {
     fn next(&self) -> Mappings {
-        match self {
-            &Mappings::Seed => Mappings::Soil,
-            &Mappings::Soil => Mappings::Fertilizer,
-            &Mappings::Fertilizer => Mappings::Water,
-            &Mappings::Water => Mappings::Light,
-            &Mappings::Light => Mappings::Temperature,
-            &Mappings::Temperature => Mappings::Humidity,
-            &Mappings::Humidity => Mappings::Location,
+        match *self {
+            Mappings::Seed => Mappings::Soil,
+            Mappings::Soil => Mappings::Fertilizer,
+            Mappings::Fertilizer => Mappings::Water,
+            Mappings::Water => Mappings::Light,
+            Mappings::Light => Mappings::Temperature,
+            Mappings::Temperature => Mappings::Humidity,
+            Mappings::Humidity => Mappings::Location,
             _ => panic!("OH NO YOU ASKED FOR A `Location`"),
         }
     }
@@ -76,15 +76,15 @@ impl From<&str> for Mappings {
 
 impl ToString for Mappings {
     fn to_string(&self) -> String {
-        match self {
-            &Mappings::Seed => String::from("seed"),
-            &Mappings::Soil => String::from("soil"),
-            &Mappings::Fertilizer => String::from("fertilizer"),
-            &Mappings::Water => String::from("water"),
-            &Mappings::Light => String::from("light"),
-            &Mappings::Temperature => String::from("temperature"),
-            &Mappings::Humidity => String::from("humidity"),
-            &Mappings::Location => String::from("location"),
+        match *self {
+            Mappings::Seed => String::from("seed"),
+            Mappings::Soil => String::from("soil"),
+            Mappings::Fertilizer => String::from("fertilizer"),
+            Mappings::Water => String::from("water"),
+            Mappings::Light => String::from("light"),
+            Mappings::Temperature => String::from("temperature"),
+            Mappings::Humidity => String::from("humidity"),
+            Mappings::Location => String::from("location"),
         }
     }
 }
@@ -103,7 +103,7 @@ fn parse_input_day1(input: &str) -> (Vec<isize>, HashMap<Mappings, Vec<RangeMap>
     let mut hm: HashMap<Mappings, Vec<RangeMap>> = HashMap::new();
 
     for i in banks.iter().skip(1) {
-        let mut it = i.lines().into_iter();
+        let mut it = i.lines();
 
         let title = it
             .next()

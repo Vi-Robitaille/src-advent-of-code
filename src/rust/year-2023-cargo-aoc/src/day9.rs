@@ -1,17 +1,15 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-
-
 #[aoc_generator(day9)]
 fn parse_input_day1(input: &str) -> Vec<Vec<isize>> {
     input
         .lines()
-        .map(|l| l.split(" ").map(|x| x.parse::<isize>().unwrap()).collect())
+        .map(|l| l.split(' ').map(|x| x.parse::<isize>().unwrap()).collect())
         .collect::<Vec<Vec<isize>>>()
 }
 
 #[aoc(day9, part1)]
-fn part_one(input: &Vec<Vec<isize>>) -> isize {
+fn part_one(input: &[Vec<isize>]) -> isize {
     input
         .iter()
         .map(|x| {
@@ -22,7 +20,7 @@ fn part_one(input: &Vec<Vec<isize>>) -> isize {
 }
 
 #[aoc(day9, part2)]
-fn part_two(input: &Vec<Vec<isize>>) -> isize {
+fn part_two(input: &[Vec<isize>]) -> isize {
     input
         .iter()
         .map(|x| {
@@ -44,9 +42,9 @@ macro_rules! differences {
     }};
 }
 
-fn find_difference(inp: &Vec<isize>) -> isize {
+fn find_difference(inp: &[isize]) -> isize {
     let mut result: Vec<isize> = Vec::new();
-    let mut local_input = inp.clone();
+    let mut local_input = inp.to_owned();
     while local_input.windows(2).any(|x| x[1] - x[0] != 0) {
         local_input = differences!(local_input);
 
@@ -56,9 +54,9 @@ fn find_difference(inp: &Vec<isize>) -> isize {
     result.iter().sum()
 }
 
-fn find_difference_other_way(inp: &Vec<isize>) -> isize {
+fn find_difference_other_way(inp: &[isize]) -> isize {
     let mut result: Vec<isize> = Vec::new();
-    let mut local_input = inp.clone();
+    let mut local_input = inp.to_owned();
     while local_input.windows(2).any(|x| x[1] - x[0] != 0) {
         local_input = differences!(local_input);
 

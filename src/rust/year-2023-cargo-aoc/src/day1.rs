@@ -4,12 +4,12 @@ use aoc_runner_derive::{aoc, aoc_generator};
 fn parse_input_day1(input: &str) -> Vec<String> {
     input
         .split('\n')
-        .map(|x| String::from(x))
+        .map(String::from)
         .collect::<Vec<String>>()
 }
 
 #[aoc(day1, part1)]
-fn part_one(input: &Vec<String>) -> usize {
+fn part_one(input: &[String]) -> usize {
     input
         .iter()
         .map(|x| {
@@ -21,7 +21,7 @@ fn part_one(input: &Vec<String>) -> usize {
 }
 
 #[aoc(day1, part2)]
-fn part_two(input: &Vec<String>) -> usize {
+fn part_two(input: &[String]) -> usize {
     input
         .iter()
         .map(|lamb| {
@@ -36,7 +36,7 @@ fn part_two(input: &Vec<String>) -> usize {
 
 /// Gotta make sure its a yukky solution!
 #[allow(non_snake_case)]
-fn BIG_REPLACE(inp: &String) -> String {
+fn BIG_REPLACE(inp: &str) -> String {
     inp.replace("one", "one1one")
         .replace("two", "two2two")
         .replace("three", "three3three")
@@ -49,8 +49,8 @@ fn BIG_REPLACE(inp: &String) -> String {
         .replace("zero", "zero0zero")
 }
 
-fn from_one_end(inp: &String) -> usize {
-    for c in inp.chars().into_iter() {
+fn from_one_end(inp: &str) -> usize {
+    for c in inp.chars() {
         if c.is_numeric() {
             return c.to_digit(10).unwrap() as usize;
         }

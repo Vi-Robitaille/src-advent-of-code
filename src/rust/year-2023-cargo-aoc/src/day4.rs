@@ -64,13 +64,13 @@ fn part_two(input: &Vec<(Vec<usize>, Vec<usize>)>) -> usize {
 
     for i in 0..input.len() {
         let current_game_wins = if let Some(index) = total_cards.get(&i) {
-            index.clone()
+            *index
         } else {
             continue;
         };
 
         let current_game_score = if let Some(index) = game_scores.get(&i) {
-            index.clone()
+            *index
         } else {
             continue;
         };
@@ -86,18 +86,18 @@ fn part_two(input: &Vec<(Vec<usize>, Vec<usize>)>) -> usize {
     }
 
     // Take the count of scratch cards and sum it
-    total_cards.values().into_iter().sum()
+    total_cards.values().sum()
 }
 
-fn solve_game_matching_numbers(winning_numbers: &Vec<usize>, card_numbers: &Vec<usize>) -> usize {
+fn solve_game_matching_numbers(winning_numbers: &[usize], card_numbers: &[usize]) -> usize {
     let mut set: HashSet<usize> = HashSet::new();
     for i in winning_numbers.iter() {
         set.insert(*i);
     }
     let mut score: usize = 0;
     for num in card_numbers {
-        if let Some(_) = set.get(num) {
-            score = score + 1;
+        if set.get(num).is_some() {
+            score += 1;
         }
     }
     score

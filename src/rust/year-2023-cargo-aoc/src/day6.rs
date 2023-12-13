@@ -1,8 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::iter::{zip};
-
+use std::iter::zip;
 
 lazy_static! {
     static ref NUMERAL: Regex = Regex::new(r"\d+").unwrap();
@@ -28,7 +27,7 @@ fn part_one(input: &(Vec<usize>, Vec<usize>)) -> usize {
     zip(input.0.clone(), input.1.clone())
         .map(|(race_time, record_distance)| {
             (0..race_time)
-                .filter(|s| is_a_win(s.clone(), race_time, record_distance))
+                .filter(|s| is_a_win(*s, race_time, record_distance))
                 .count()
         })
         .reduce(|a, b| a * b)
@@ -50,7 +49,7 @@ fn part_two(input: &(Vec<usize>, Vec<usize>)) -> usize {
         .parse::<usize>()
         .unwrap();
     (0..race_time)
-        .filter(|s| is_a_win(s.clone(), race_time, race_dist))
+        .filter(|&s| is_a_win(s, race_time, race_dist))
         .count()
 }
 

@@ -13,11 +13,11 @@ lazy_static! {
 
 #[aoc_generator(day2)]
 fn parse_input_day1(input: &str) -> Vec<Game> {
-    input.lines().map(|x| Game::from(x)).collect::<Vec<Game>>()
+    input.lines().map(Game::from).collect::<Vec<Game>>()
 }
 
 #[aoc(day2, part1)]
-fn part_one(input: &Vec<Game>) -> usize {
+fn part_one(input: &[Game]) -> usize {
     let constraints = Hand {
         red: 12,
         green: 13,
@@ -31,7 +31,7 @@ fn part_one(input: &Vec<Game>) -> usize {
 }
 
 #[aoc(day2, part2)]
-fn part_two(input: &Vec<Game>) -> usize {
+fn part_two(input: &[Game]) -> usize {
     input.iter().map(|f| f.power_level()).sum()
 }
 
@@ -45,7 +45,7 @@ impl From<&str> for Game {
     // Game 9: 1 green, 5 blue; 4 blue; 2 red, 1 blue
     fn from(value: &str) -> Self {
         // Im hungover fuck you
-        let mut spl_game = value.split(':').into_iter();
+        let mut spl_game = value.split(':');
         let id = spl_game
             .next()
             .unwrap()
@@ -58,7 +58,7 @@ impl From<&str> for Game {
             .next()
             .unwrap()
             .split(';')
-            .map(|d| Hand::from(d))
+            .map(Hand::from)
             .collect::<Vec<Hand>>();
         Game { id, dealings }
     }
