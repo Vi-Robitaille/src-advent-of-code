@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use geo::{Contains, Intersects};
+use geo::Intersects;
 use geo::{coord, Coord, Line};
 use itertools::Itertools;
 use std::ops::Range;
@@ -150,15 +150,20 @@ fn part_two(input: &Vec<Vec<char>>) -> usize {
             
             contained = ground_points.iter()
                 .filter(|&&p| {
-                    let test_line = Line::new(coord! { x: 0.0, y: p.y}, p);
-                    path.iter()
-                        .filter(|&&l| l.intersects(&test_line) && !test_line.contains(&l))
-                        .count() % 2 == 1
+                    // Add a slight offset to the endpoint since detecting overlaps is annoying
+                    // 1.7319 is the ratio of a triangle to have one angle at 30 deg
+                    let test_line = Line::new(p, coord! { x: -1.0, y: p.y - ((p.x + 1.0) / 1.7319)});
+                    let intersections = path.iter().filter(|l| {
+                            l.intersects(&test_line)
+                        })
+                        .count();
+                    intersections > 0 && intersections % 2 == 1
                 })
+                .map(|x| println!("({:?},{:?})", x.x, x.y))
                 .count();
-            if contained > 0 {
-                break;
-            }
+            path.iter()
+                .for_each(|x| println!("((1-t){} + t{}, (1-t){} + t{})", x.start.x, x.end.x, x.start.y, x.end.y));
+            println!("-------------")
         }
     }
     contained
@@ -344,8 +349,8 @@ fn step(current_node: &Node, previous_node: &Node, grid: &Arc<Vec<Vec<char>>>) -
 
 fn get_all_ground_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
     let mut res: Vec<Coord<f64>> = vec![];
-    for (x, i) in grid.iter().enumerate() {
-        for (y, e) in i.iter().enumerate() {
+    for (y, i) in grid.iter().enumerate() {
+        for (x, e) in i.iter().enumerate() {
             if e == &'.' {
                 res.push(Node { x, y }.as_coord());
             }

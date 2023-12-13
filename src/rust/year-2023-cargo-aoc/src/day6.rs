@@ -1,8 +1,8 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::iter::{zip, Zip};
-use std::vec::IntoIter;
+use std::iter::{zip};
+
 
 lazy_static! {
     static ref NUMERAL: Regex = Regex::new(r"\d+").unwrap();

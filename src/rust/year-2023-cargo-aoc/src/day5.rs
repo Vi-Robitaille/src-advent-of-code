@@ -1,7 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use itertools::Itertools;
 use std::collections::HashMap;
-use std::sync::mpsc::channel;
+
 use std::sync::{Arc, Mutex};
 use std::thread::{self, JoinHandle};
 
@@ -20,7 +19,6 @@ struct RangeMap {
     range: std::ops::Range<isize>,
     dest: isize,
     src: isize,
-    size: isize,
 }
 
 impl RangeMap {
@@ -133,7 +131,6 @@ fn parse_input_day1(input: &str) -> (Vec<isize>, HashMap<Mappings, Vec<RangeMap>
                     range: (src..src + size),
                     dest,
                     src,
-                    size,
                 }
             })
             .collect::<Vec<RangeMap>>();
@@ -179,7 +176,7 @@ fn part_two(input: &(Vec<isize>, HashMap<Mappings, Vec<RangeMap>>)) -> isize {
     }
 
     for t in thread_handles {
-        t.join();
+        let _ = t.join();
     }
 
     let ans = *smallest_seed.lock().unwrap();

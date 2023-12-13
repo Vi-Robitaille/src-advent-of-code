@@ -5,7 +5,7 @@ use prime_factorization::Factorization;
 use regex::Regex;
 use std::collections::HashMap;
 
-/// Try using nom later
+// Try using nom later
 lazy_static! {
     static ref NODE_REGEX: Regex = Regex::new(r"[1-9A-Z]{3}").unwrap();
 }
@@ -95,7 +95,7 @@ fn part_two(input: &(String, HashMap<String, Node>)) -> usize {
 
     result
         .iter()
-        .map(|(k, v)| *k as usize)
+        .map(|(k, _v)| *k as usize)
         .reduce(|a, b| a * b)
         .unwrap()
 }

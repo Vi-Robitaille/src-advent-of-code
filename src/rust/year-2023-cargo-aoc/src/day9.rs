@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use itertools::Itertools;
+
 
 #[aoc_generator(day9)]
 fn parse_input_day1(input: &str) -> Vec<Vec<isize>> {

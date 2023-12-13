@@ -36,7 +36,7 @@ fn part_one(input: &Vec<Hand>) -> usize {
 }
 
 #[aoc(day7, part2)]
-fn part_two(input: &Vec<Hand>) -> usize {
+fn part_two(_input: &Vec<Hand>) -> usize {
     1
 }
 
