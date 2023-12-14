@@ -28,11 +28,7 @@ fn parse_input_day1(input: &str) -> Vec<Hand> {
 fn part_one(input: &[Hand]) -> usize {
     let mut input = input.to_owned();
     input.sort();
-    input
-        .iter()
-        .enumerate()
-        .map(|(i, e)| (i + 1) * e.bid)
-        .sum()
+    input.iter().enumerate().map(|(i, e)| (i + 1) * e.bid).sum()
 }
 
 #[aoc(day7, part2)]

@@ -1,14 +1,12 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
 use itertools::Itertools;
-
-
-
+use std::collections::HashSet;
 
 //
 // Normally when dealing with a Vec<Vec<T>> x, y indexing can get annoying
 //  I'm going to be using x and y as the actual x, y coords as you would see them
-//   looking at the input 
+//   looking at the input
 //
 
 // (0, 0)      (9, 0)
@@ -24,76 +22,158 @@ use itertools::Itertools;
 //   C...#....D
 // (0, 9)     (9, 9)
 
-
-
-
 #[aoc_generator(day11)]
-fn parse_input_day11(input: &str) -> FinishedUniverse {
-    let inp = Universe(input.lines().map(|a| a.chars().collect_vec()).collect_vec());
-    let r = FinishedUniverse::from(inp);
-    r
+fn parse_input(input: &str) -> Universe {
+    Universe(input.lines().map(|a| a.chars().collect_vec()).collect_vec())
 }
 
 #[aoc(day11, part1)]
-fn part_one(input: &FinishedUniverse) -> u8 {
-    1
+fn part_one(input: &Universe) -> usize {
+    let modifier = 1;
+    let universe = FinishedUniverse::new(input, modifier);
+    solve(&universe)
 }
 
 #[aoc(day11, part2)]
-fn part_two(input: &FinishedUniverse) -> u8 {
-    1
+fn part_two(input: &Universe) -> usize {
+    let modifier = 1_000_000 - 1;
+    let universe = FinishedUniverse::new(input, modifier);
+    solve(&universe)
 }
 
+fn solve(universe: &FinishedUniverse) -> usize {
+    let mut evaluated_points: HashSet<&Point> = HashSet::new();
+    universe
+        .galaxy_coords
+        .iter()
+        .map(|lhs| {
+            let _ = evaluated_points.insert(lhs);
+            universe
+                .galaxy_coords
+                .iter()
+                .map(|rhs| {
+                    if evaluated_points.get(rhs).is_none() {
+                        lhs.manhat_dist(&rhs)
+                    } else {
+                        0
+                    }
+                })
+                .sum::<usize>()
+        })
+        .sum()
+}
+
+#[derive(Debug, Hash, PartialEq, Eq)]
 struct Point {
     x: usize,
     y: usize,
 }
 
-
-struct FinishedUniverse {
-    grid: Universe,
-    empty_columns: Vec<usize>,
-    empty_rows: Vec<usize>,
-    galaxy_coords: Vec<Point>
+impl Point {
+    fn dx(&self, rhs: &Self) -> usize {
+        match (self.x, rhs.x) {
+            (a, b) if a < b => b - a,
+            (a, b) if a > b => a - b,
+            (a, b) if a == b => 0,
+            _ => panic!("How?"),
+        }
+    }
+    fn dy(&self, rhs: &Self) -> usize {
+        match (self.y, rhs.y) {
+            (a, b) if a < b => b - a,
+            (a, b) if a > b => a - b,
+            (a, b) if a == b => 0,
+            _ => panic!("How?"),
+        }
+    }
+    fn manhat_dist(&self, rhs: &Self) -> usize {
+        self.dx(rhs) + self.dy(rhs)
+    }
 }
 
-impl From<Universe> for FinishedUniverse {
-    fn from(value: Universe) -> Self {
-        let v = value.expand_empty_space();
-        let empty_rows = v.empty_rows();
-        let mut grid = Universe(transpose(v.0));
-        grid = grid.expand_empty_space();
-        let empty_columns = grid.empty_rows();
-        let galaxy_coords = grid.get_galaxy_coords();
+struct FinishedUniverse {
+    // grid: Universe,
+    galaxy_coords: Vec<Point>,
+    empty_rows: Vec<usize>,
+    empty_cols: Vec<usize>,
+}
+
+impl FinishedUniverse {
+    fn new(value: &Universe, modifier: usize) -> Self {
+        // value.expand_empty_space(1);
+        let empty_rows = value.empty_rows();
+        let grid = Universe(transpose(value.0.clone()));
+        // grid.expand_empty_space(1);
+        let empty_cols = grid.empty_rows();
+        let galaxy_coords = grid.get_galaxy_coords(&empty_rows, &empty_cols, modifier);
 
         FinishedUniverse {
-            grid,
-            empty_columns,
-            empty_rows,
+            // grid,
             galaxy_coords,
+            empty_rows,
+            empty_cols,
         }
     }
 }
 
 struct Universe(Vec<Vec<char>>);
 impl Universe {
-    fn expand_empty_space(mut self) -> Self {
-        todo!();
+    ///
+    /// Actually expand space since i have a feeling pt2 is going to pull some shit
+    /// in reality tho its gonna need to be solved with math im sure
+    ///
+    /// Edit.
+    /// fuck
+    ///
+    #[allow(unused)]
+    fn expand_empty_space(&mut self, modifier: usize) {
+        let mut empty_row_indexes = self.empty_rows();
+        empty_row_indexes.sort();
+
+        println!("Found {:?} empty lines", empty_row_indexes.len());
+        // Reverse the iter, if we dont the indexes will be invalid at the
+        // first insert
+        let empty_space = vec!['.'; self.0.len()];
+        for i in empty_row_indexes.into_iter().rev() {
+            for j in 0..modifier {
+                self.0.insert(i + j, empty_space.clone());
+            }
+        }
     }
+
     fn empty_rows(&self) -> Vec<usize> {
-        self.0.iter()
+        self.0
+            .iter()
             .enumerate()
-            .filter_map(|(i, e)| {
-                (e.iter().any(|&c| c == '#')).then_some(i)
-            })
+            .filter_map(|(i, e)| (!e.iter().any(|&c| c == '#')).then_some(i))
             .collect_vec()
     }
-    fn get_galaxy_coords(&self) -> Vec<Point> {
+
+    fn get_galaxy_coords(
+        &self,
+        empty_rows: &Vec<usize>,
+        empty_cols: &Vec<usize>,
+        modifier: usize,
+    ) -> Vec<Point> {
         let mut res = vec![];
         for (x, i) in self.0.iter().enumerate() {
             for (y, j) in i.iter().enumerate() {
                 if *j == '#' {
-                    res.push(Point { x, y })
+                    let x_range = 0..x;
+                    let y_range = 0..y;
+                    let adx = empty_cols
+                        .iter()
+                        .filter_map(|a| x_range.contains(a).then_some(modifier))
+                        .fold(0, |a, b| a + b);
+                    let ady = empty_rows
+                        .iter()
+                        .filter_map(|a| y_range.contains(a).then_some(modifier))
+                        .fold(0, |a, b| a + b);
+
+                    res.push(Point {
+                        x: x + adx,
+                        y: y + ady,
+                    });
                 }
             }
         }
@@ -114,4 +194,46 @@ fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
                 .collect::<Vec<T>>()
         })
         .collect()
+}
+
+fn make_unordered_range(lhs: usize, rhs: usize) -> std::ops::Range<usize> {
+    match lhs <= rhs {
+        true => lhs..rhs,
+        false => rhs..lhs,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const INPUT: &'static str = include_str!("../input/2023/day11.txt");
+    const TEST_INPUT_1: &'static str = include_str!("../input/2023/day11-test.txt");
+
+    #[test]
+    fn part_1_test_1() {
+        let inp = parse_input(TEST_INPUT_1);
+        assert_eq!(part_one(&inp), 374)
+    }
+    #[test]
+    fn part_1_test_2() {
+        let inp = parse_input(INPUT);
+        assert_eq!(part_one(&inp), 9403026)
+    }
+
+    #[test]
+    fn part_2_test_1() {
+        let inp = parse_input(TEST_INPUT_1);
+        let modifier = 10 - 1;
+        let universe = FinishedUniverse::new(&inp, modifier);
+        assert_eq!(solve(&universe), 1030)
+    }
+
+    #[test]
+    fn part_2_test_2() {
+        let inp = parse_input(TEST_INPUT_1);
+        let modifier = 100 - 1;
+        let universe = FinishedUniverse::new(&inp, modifier);
+        assert_eq!(solve(&universe), 8410)
+    }
 }

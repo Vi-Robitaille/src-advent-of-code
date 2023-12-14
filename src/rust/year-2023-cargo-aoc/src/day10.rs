@@ -1,7 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
+use geo::{coord, Coord, Line, LineString, Polygon};
 use geo::{Contains, Intersects};
-use geo::{coord, Coord, Line, Polygon, LineString};
 use itertools::Itertools;
 use std::ops::Range;
 use std::sync::Arc;
@@ -73,18 +73,17 @@ fn part_one(input: &[Vec<char>]) -> usize {
     res.iter().last().unwrap().to_owned()
 }
 
-
 ///
 /// You know when you've sunk a lot of time into a solution
 /// and you dont want to abandon it
 /// but it gets really gross
 /// and you keep pushing to make it work
 /// but its just not a great solution?
-/// 
+///
 /// This is that
-/// 
+///
 /// im not cleaning it.
-/// 
+///
 #[aoc(day10, part2)]
 fn part_two(input: &[Vec<char>]) -> usize {
     // Same bullshit start finder, ya you can do it differently but
@@ -134,9 +133,8 @@ fn part_two(input: &[Vec<char>]) -> usize {
                     return None;
                 }
                 resulting_points.push(node.as_coord());
-                
             }
-            
+
             resulting_points.push(starting_node.as_coord());
             Some(LineString::new(resulting_points))
         });
@@ -146,14 +144,13 @@ fn part_two(input: &[Vec<char>]) -> usize {
     solve_via_polygon(handles, &grid_arc)
 }
 
-
 type Yuck = Vec<JoinHandle<Option<Vec<Line>>>>;
 type YuckLineString = Vec<JoinHandle<Option<LineString<f64>>>>;
 type GridYuck = Arc<Vec<Vec<char>>>;
 ///
 /// The print statements in this output a desmos formatted paste
 /// so you can toss it into a desmos graph to see how dumb i am
-/// 
+///
 #[allow(unused)]
 fn solve_via_polygon(handles: YuckLineString, grid: &GridYuck) -> usize {
     let mut contained: usize = 0;
@@ -167,14 +164,10 @@ fn solve_via_polygon(handles: YuckLineString, grid: &GridYuck) -> usize {
 
             let poly = Polygon::new(path, vec![]);
 
-            contained = ground_points
-                .iter()
-                .filter(|&&p| poly.contains(&p))
-                .count();
+            contained = ground_points.iter().filter(|&&p| poly.contains(&p)).count();
 
             println!("Poly has {} points within", contained);
 
-            
             // contained = ground_points
             //     .iter()
             //     .filter(|&&p| {
@@ -212,11 +205,7 @@ fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Vec<Node> {
     match PipeTypes::from((grid[n.y][n.x], nodes)) {
         PipeTypes::Ground => vec![],
         PipeTypes::Start(a, b, c, d) => {
-            let nodes = vec![a, b, c, d]
-                .iter()
-                .flatten()
-                .cloned()
-                .collect_vec();
+            let nodes = vec![a, b, c, d].iter().flatten().cloned().collect_vec();
             nodes
         }
 
@@ -226,11 +215,7 @@ fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Vec<Node> {
         | PipeTypes::NWNinety(a, b)
         | PipeTypes::SWNinety(a, b)
         | PipeTypes::SENinety(a, b) => {
-            let nodes = vec![a, b]
-                .iter()
-                .flatten()
-                .cloned()
-                .collect_vec();
+            let nodes = vec![a, b].iter().flatten().cloned().collect_vec();
             nodes
         }
     }
@@ -427,8 +412,6 @@ fn get_all_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
 // to do this we need to test if the line evaluating its position is coplanar with
 // a polygon face or evaluate the polygon from a non orthogonal direction
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -451,37 +434,37 @@ mod tests {
         let inp = parse_input_day1(TEST_INPUT_2);
         assert_eq!(part_one(&inp), 8)
     }
-    
+
     #[test]
     fn part_1_input() {
         let inp = parse_input_day1(INPUT);
         assert_eq!(part_one(&inp), 6979)
     }
-    
+
     #[test]
     fn part_2_sample_3() {
         let inp = parse_input_day1(TEST_INPUT_3);
         assert_eq!(part_two(&inp), 4)
     }
-    
+
     #[test]
     fn part_2_sample_4() {
         let inp = parse_input_day1(TEST_INPUT_4);
         assert_eq!(part_two(&inp), 4)
     }
-    
+
     #[test]
     fn part_2_sample_5() {
         let inp = parse_input_day1(TEST_INPUT_5);
         assert_eq!(part_two(&inp), 8)
     }
-    
+
     #[test]
     fn part_2_sample_6() {
         let inp = parse_input_day1(TEST_INPUT_6);
         assert_eq!(part_two(&inp), 10)
     }
-    
+
     #[test]
     fn part_2_input() {
         let inp = parse_input_day1(INPUT);

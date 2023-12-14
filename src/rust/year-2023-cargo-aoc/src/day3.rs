@@ -19,7 +19,7 @@ fn parse_input_day1(input: &str) -> String {
     // pls dont look
 
     let padding: String = ['.'; MAX_SIZE].iter().collect();
-    
+
     [
         padding.clone(),
         String::from("\n"),
