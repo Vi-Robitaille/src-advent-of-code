@@ -2,7 +2,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 use itertools::Itertools;
 use std::collections::HashMap;
-use cached::proc_macro::cached;
+// use cached::proc_macro::cached;
 
 #[aoc_generator(day12)]
 fn parse_input(input: &str) -> Vec<(Vec<usize>, Vec<usize>)> {
@@ -10,9 +10,7 @@ fn parse_input(input: &str) -> Vec<(Vec<usize>, Vec<usize>)> {
         .lines()
         .map(|x| x.split(' '))
         .map(|mut x| {
-            let states = new_state_string(
-                x.next().unwrap().chars().collect_vec()
-            );
+            let states = new_state_string(x.next().unwrap().chars().collect_vec());
             let keys = x
                 .next()
                 .unwrap()
@@ -25,7 +23,7 @@ fn parse_input(input: &str) -> Vec<(Vec<usize>, Vec<usize>)> {
 }
 
 #[aoc(day12, part1)]
-fn part_one(input: &Vec<(Vec<usize>, Vec<usize>)>) -> usize {
+fn part_one(input: &[(Vec<usize>, Vec<usize>)]) -> usize {
     // let mut sum = 0;
     // let mut hm: HashMap<(usize, usize), usize> = HashMap::new();
     // for (s, k) in input {
@@ -40,7 +38,7 @@ fn part_one(input: &Vec<(Vec<usize>, Vec<usize>)>) -> usize {
 }
 
 #[aoc(day12, part2)]
-fn part_two(input: &Vec<(Vec<usize>, Vec<usize>)>) -> u8 {
+fn part_two(_input: &[(Vec<usize>, Vec<usize>)]) -> u8 {
     1
 }
 
@@ -54,7 +52,6 @@ fn new_state_string(i: Vec<char>) -> Vec<usize> {
         })
         .collect_vec()
 }
-
 
 // fn count(state: &[usize], keys: &[usize], hm: &mut HashMap<(usize, usize), usize>) -> usize {
 //     if let Some(x) = hm.get(&(state.len(), keys.len())) {
@@ -115,8 +112,7 @@ fn arrangements(
     }
 
     for offset in 0..conditions.len() {
-        if conditions[0..offset].contains(&2) || offset + damaged_groups[0] > conditions.len()
-        {
+        if conditions[0..offset].contains(&2) || offset + damaged_groups[0] > conditions.len() {
             break;
         }
 
@@ -129,8 +125,7 @@ fn arrangements(
                 count += 1;
                 break;
             } else {
-                count +=
-                    arrangements(&conditions[offset + damaged_groups[0]..], &[], cache);
+                count += arrangements(&conditions[offset + damaged_groups[0]..], &[], cache);
                 continue;
             };
         } else if offset + damaged_groups[0] + 1 > conditions.len() {

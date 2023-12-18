@@ -82,7 +82,7 @@ fn part_one(input: &str) -> usize {
 
                     let is_near_symbol = chain(a, chain(b, c)).any(|f| match f {
                         i if i.is_ascii_digit() => false,
-                        i if i == '.' => false,
+                        '.' => false,
                         _ => true,
                     });
                     is_near_symbol.then_some(numeral)

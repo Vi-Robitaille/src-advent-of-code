@@ -1,7 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use geo::{coord, Coord, Line, LineString, Polygon};
-use geo::{Contains, Intersects};
+use geo::Contains;
+use geo::{coord, Coord, LineString, Polygon};
 use itertools::Itertools;
 use std::ops::Range;
 use std::sync::Arc;
@@ -123,7 +123,6 @@ fn part_two(input: &[Vec<char>]) -> usize {
         let h = thread::spawn(move || {
             let mut resulting_points: Vec<Coord> = vec![];
             let mut previous_node = starting_node;
-            let mut previous_corner = starting_node;
 
             while node != starting_node {
                 if let Ok(next_node) = step(&node, &previous_node, &grid_arc) {
@@ -144,7 +143,6 @@ fn part_two(input: &[Vec<char>]) -> usize {
     solve_via_polygon(handles, &grid_arc)
 }
 
-type Yuck = Vec<JoinHandle<Option<Vec<Line>>>>;
 type YuckLineString = Vec<JoinHandle<Option<LineString<f64>>>>;
 type GridYuck = Arc<Vec<Vec<char>>>;
 ///
@@ -165,28 +163,6 @@ fn solve_via_polygon(handles: YuckLineString, grid: &GridYuck) -> usize {
             let poly = Polygon::new(path, vec![]);
 
             contained = ground_points.iter().filter(|&&p| poly.contains(&p)).count();
-
-            println!("Poly has {} points within", contained);
-
-            // contained = ground_points
-            //     .iter()
-            //     .filter(|&&p| {
-            //         // Add a slight offset to the endpoint since detecting overlaps is annoying
-            //         // 1.7319 is the ratio of a triangle to have one angle at 30 deg
-            //         let test_line =
-            //             Line::new(p, coord! { x: -1.0, y: p.y - ((p.x + 1.0) / 1.7319)});
-            //         let intersections = path.iter().filter(|l| l.intersects(&test_line) && !l.intersects(&p)).count();
-            //         intersections > 0 && intersections % 2 == 1
-            //     })
-            //     .map(|x| println!("({:?},{:?})", x.x, x.y))
-            //     .count();
-            // path.iter().for_each(|x| {
-            //     println!(
-            //         "((1-t){} + t{}, (1-t){} + t{})",
-            //         x.start.x, x.end.x, x.start.y, x.end.y
-            //     )
-            // });
-            println!("-------------")
         }
     }
     contained
@@ -205,7 +181,7 @@ fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Vec<Node> {
     match PipeTypes::from((grid[n.y][n.x], nodes)) {
         PipeTypes::Ground => vec![],
         PipeTypes::Start(a, b, c, d) => {
-            let nodes = vec![a, b, c, d].iter().flatten().cloned().collect_vec();
+            let nodes = [a, b, c, d].iter().flatten().cloned().collect_vec();
             nodes
         }
 
@@ -215,7 +191,7 @@ fn get_adjacent(n: &Node, grid: &Arc<Vec<Vec<char>>>) -> Vec<Node> {
         | PipeTypes::NWNinety(a, b)
         | PipeTypes::SWNinety(a, b)
         | PipeTypes::SENinety(a, b) => {
-            let nodes = vec![a, b].iter().flatten().cloned().collect_vec();
+            let nodes = [a, b].iter().flatten().cloned().collect_vec();
             nodes
         }
     }
@@ -264,6 +240,7 @@ impl Node {
             y: self.y as f64,
         }
     }
+    #[allow(dead_code)]
     fn is_corner(&self, grid: &Arc<Vec<Vec<char>>>) -> bool {
         matches!(grid[self.y][self.x], 'L' | 'J' | '7' | 'F')
     }
@@ -388,7 +365,7 @@ fn step(current_node: &Node, previous_node: &Node, grid: &Arc<Vec<Vec<char>>>) -
 fn get_all_nodes(grid: &Arc<Vec<Vec<char>>>) -> Vec<Coord<f64>> {
     let mut res: Vec<Coord<f64>> = vec![];
     for (y, i) in grid.iter().enumerate() {
-        for (x, e) in i.iter().enumerate() {
+        for (x, _e) in i.iter().enumerate() {
             res.push(Node { x, y }.as_coord());
         }
     }

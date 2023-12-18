@@ -53,7 +53,7 @@ fn solve(universe: &FinishedUniverse) -> usize {
                 .iter()
                 .map(|rhs| {
                     if evaluated_points.get(rhs).is_none() {
-                        lhs.manhat_dist(&rhs)
+                        lhs.manhat_dist(rhs)
                     } else {
                         0
                     }
@@ -92,10 +92,7 @@ impl Point {
 }
 
 struct FinishedUniverse {
-    // grid: Universe,
     galaxy_coords: Vec<Point>,
-    empty_rows: Vec<usize>,
-    empty_cols: Vec<usize>,
 }
 
 impl FinishedUniverse {
@@ -107,12 +104,7 @@ impl FinishedUniverse {
         let empty_cols = grid.empty_rows();
         let galaxy_coords = grid.get_galaxy_coords(&empty_rows, &empty_cols, modifier);
 
-        FinishedUniverse {
-            // grid,
-            galaxy_coords,
-            empty_rows,
-            empty_cols,
-        }
+        FinishedUniverse { galaxy_coords }
     }
 }
 
@@ -151,8 +143,8 @@ impl Universe {
 
     fn get_galaxy_coords(
         &self,
-        empty_rows: &Vec<usize>,
-        empty_cols: &Vec<usize>,
+        empty_rows: &[usize],
+        empty_cols: &[usize],
         modifier: usize,
     ) -> Vec<Point> {
         let mut res = vec![];
@@ -164,11 +156,11 @@ impl Universe {
                     let adx = empty_cols
                         .iter()
                         .filter_map(|a| x_range.contains(a).then_some(modifier))
-                        .fold(0, |a, b| a + b);
+                        .sum::<usize>();
                     let ady = empty_rows
                         .iter()
                         .filter_map(|a| y_range.contains(a).then_some(modifier))
-                        .fold(0, |a, b| a + b);
+                        .sum::<usize>();
 
                     res.push(Point {
                         x: x + adx,
@@ -194,13 +186,6 @@ fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
                 .collect::<Vec<T>>()
         })
         .collect()
-}
-
-fn make_unordered_range(lhs: usize, rhs: usize) -> std::ops::Range<usize> {
-    match lhs <= rhs {
-        true => lhs..rhs,
-        false => rhs..lhs,
-    }
 }
 
 #[cfg(test)]

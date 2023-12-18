@@ -87,12 +87,12 @@ impl Hand {
                 .take(2)
                 .collect_tuple::<(&usize, &usize)>()
             {
-                x if x == Some((&4, &1)) => PowerStates::FourOfAKind,
-                x if x == Some((&3, &2)) => PowerStates::FullHouse,
-                x if x == Some((&3, &1)) => PowerStates::ThreeOfAKind,
-                x if x == Some((&2, &2)) => PowerStates::TwoPair,
-                x if x == Some((&2, &1)) => PowerStates::OnePair,
-                x if x == Some((&1, &1)) => PowerStates::HighCard,
+                Some((&4, &1)) => PowerStates::FourOfAKind,
+                Some((&3, &2)) => PowerStates::FullHouse,
+                Some((&3, &1)) => PowerStates::ThreeOfAKind,
+                Some((&2, &2)) => PowerStates::TwoPair,
+                Some((&2, &1)) => PowerStates::OnePair,
+                Some((&1, &1)) => PowerStates::HighCard,
                 Some(_) => panic!(),
                 None => panic!(),
             }

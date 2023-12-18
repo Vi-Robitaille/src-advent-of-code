@@ -1,6 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-use std::{fmt, vec};
+
+
 
 #[aoc_generator(day1)]
 fn parse_input(input: &str) -> Vec<()> {
@@ -8,11 +9,11 @@ fn parse_input(input: &str) -> Vec<()> {
 }
 
 #[aoc(day1, part1)]
-fn part_one(input: &Vec<()>) -> u8 {
+fn part_one(input: &Vec<()>) -> usize {
     1
 }
 
 #[aoc(day1, part2)]
-fn part_two(input: &Vec<()>) -> u8 {
+fn part_two(input: &Vec<()>) -> usize {
     1
 }
