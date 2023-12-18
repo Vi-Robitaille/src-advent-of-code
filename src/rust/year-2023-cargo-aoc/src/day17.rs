@@ -3,6 +3,7 @@ use aoc_runner_derive::{aoc, aoc_generator};
 use grid::*;
 use itertools::Itertools;
 use lazy_static::lazy_static;
+use pathfinding::prelude::astar;
 use Heading::*;
 
 lazy_static! {
@@ -24,24 +25,27 @@ lazy_static! {
     ];
 }
 
-static mut GOAL: Point = Point { x: 0, y: 0 };
-/// Fight me.
-unsafe fn set_goal(p: Point) {
-    GOAL = p;
-}
+// static mut GOAL: Point = Point { x: 0, y: 0 };
+// /// Fight me.
+// unsafe fn set_goal(p: Point) {
+//     GOAL = p;
+// }
 
 #[aoc_generator(day17)]
-fn parse_input(input: &str) -> Vec<()> {
-    vec![()]
+fn parse_input(input: &str) -> Grid<u8> {
+    let g = input.lines().flat_map(|l| l.chars().map(|c| c.to_digit(10).unwrap() as u8).collect_vec()).collect_vec();
+    let size = (g.len() as f64).sqrt() as usize;
+    Grid::from_vec(g, size)
 }
 
 #[aoc(day17, part1)]
-fn part_one(input: &Vec<()>) -> usize {
+fn part_one(input: &Grid<u8>) -> usize {
+    
     1
 }
 
 #[aoc(day17, part2)]
-fn part_two(input: &Vec<()>) -> usize {
+fn part_two(input: &[u8]) -> usize {
     1
 }
 
@@ -53,7 +57,7 @@ enum Heading {
     LEFT,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct Point {
     x: usize,
     y: usize,
@@ -88,6 +92,7 @@ impl Point {
 
 struct Town {
     positions: Grid<u8>,
+    goal: Point,
 }
 
 impl Town {
@@ -134,5 +139,10 @@ impl Town {
                     None
                 }
             }).collect_vec()
-    }    
+    }
+
+    fn distance(&self, p: Point) -> usize {
+        let Point { x, y } = self.goal;
+        p.x.abs_diff(x) + p.y.abs_diff(y)
+    }
 }
