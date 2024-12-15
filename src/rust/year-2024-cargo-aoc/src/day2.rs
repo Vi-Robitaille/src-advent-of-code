@@ -61,13 +61,11 @@ fn part_two(input: &Inp) -> usize {
 
 fn eval_entry_part_twooo(e: &[I]) -> bool {
     (0..e.len())
-        .map(|i| {
+        .filter(|i| {
             let mut a = e.to_vec();
-            let _ = a.remove(i);
+            let _ = a.remove(*i);
             eval_entry(&a)
         })
-        .counts()
-        .get(&true)
-        .unwrap_or(&0)
-        > &0
+        .collect::<Vec<_>>().len()
+        > 0
 }
