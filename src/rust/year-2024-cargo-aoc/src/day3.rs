@@ -1,19 +1,34 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
 use nom::{
-    IResult,
-    sequence::delimited,
-    // see the "streaming/complete" paragraph lower for an explanation of these submodules
-    character::complete::char,
-    bytes::complete::{is_not, tag}
+    bytes::complete::{is_a, tag, take_while}, character::complete::char, combinator::map_res, sequence::{delimited, separated_pair}, IResult
 };
 
 type Inp = Vec<String>;
 
 // mul(8,5)
 
-fn parens(input: &str) -> IResult<&str, &str> {
-    delimited(tag("mul("), second, char(')'))
+fn from_b10(input: &str) -> Result<usize, std::num::ParseIntError> {
+    usize::from_str_radix(input, 10)
+}
+
+fn is_digit(c: char) -> bool {
+    c.is_digit(10)
+}
+
+fn num_extraction(input: &str) -> IResult<&str, usize> {
+    map_res(take_while(is_digit), from_b10)(input)
+}
+
+fn parens(input: &str) -> IResult<&str, (usize, usize)> {
+    delimited(tag("mul("), separated_pair(num_extraction, char(','), num_extraction), char(')'))(input)
+}
+
+fn check_enable(input: &str) -> IResult<&str, &str> {
+    tag("do()")(input)
+}
+fn check_disable(input: &str) -> IResult<&str, &str> {
+    tag("don't()")(input)
 }
 
 #[aoc_generator(day3)]
@@ -23,10 +38,34 @@ fn parse_input(input: &str) -> Inp {
 
 #[aoc(day3, part1)]
 fn part_one(input: &Inp) -> usize {
-    1
+    let mut total = 0;
+    for i in input {
+        for j in 0..i.len() {
+            if let Ok((_, (a, b))) = parens(&i[j..]) {
+                total += a * b;
+            }
+        }
+    }
+    total
 }
 
 #[aoc(day3, part2)]
 fn part_two(input: &Inp) -> usize {
-    1
+    let mut total = 0;
+    let mut status = true;
+    for i in input {
+        for j in 0..i.len() {
+            let test_pattern = &i[j..];
+            if let Ok(_) = check_enable(test_pattern) {
+                status = true;
+            }
+            if let Ok(_) = check_disable(test_pattern) {
+                status = false;
+            }
+            if let (Ok((_, (a, b))), true) = (parens(test_pattern), status) {
+                total += a * b;
+            }
+        }
+    }
+    total
 }
