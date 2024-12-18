@@ -1,7 +1,11 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
 use nom::{
-    bytes::complete::{is_a, tag, take_while}, character::complete::char, combinator::map_res, sequence::{delimited, separated_pair}, IResult
+    bytes::complete::{is_a, tag, take_while},
+    character::complete::char,
+    combinator::map_res,
+    sequence::{delimited, separated_pair},
+    IResult,
 };
 
 type Inp = Vec<String>;
@@ -21,7 +25,11 @@ fn num_extraction(input: &str) -> IResult<&str, usize> {
 }
 
 fn parens(input: &str) -> IResult<&str, (usize, usize)> {
-    delimited(tag("mul("), separated_pair(num_extraction, char(','), num_extraction), char(')'))(input)
+    delimited(
+        tag("mul("),
+        separated_pair(num_extraction, char(','), num_extraction),
+        char(')'),
+    )(input)
 }
 
 fn check_enable(input: &str) -> IResult<&str, &str> {

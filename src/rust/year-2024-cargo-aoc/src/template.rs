@@ -1,6 +1,6 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
-type Inp = Vec<Vec<usize>>;
+type Inp = Vec<()>;
 
 #[aoc_generator(day1)]
 fn parse_input(input: &str) -> Inp {

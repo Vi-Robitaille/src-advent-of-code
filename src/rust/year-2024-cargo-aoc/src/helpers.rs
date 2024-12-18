@@ -1,5 +1,5 @@
 #[allow(unused)]
-pub(crate) fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
+pub(crate) fn transpose<T: Copy + Clone>(v: &Vec<Vec<T>>) -> Vec<Vec<T>> {
     assert!(!v.is_empty());
     let len = v[0].len();
     let mut iters: Vec<_> = v.into_iter().map(|n| n.into_iter()).collect();
@@ -8,6 +8,7 @@ pub(crate) fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
             iters
                 .iter_mut()
                 .map(|n| n.next().unwrap())
+                .cloned()
                 .collect::<Vec<T>>()
         })
         .collect()

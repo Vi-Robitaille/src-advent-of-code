@@ -66,6 +66,7 @@ fn eval_entry_part_twooo(e: &[I]) -> bool {
             let _ = a.remove(*i);
             eval_entry(&a)
         })
-        .collect::<Vec<_>>().len()
+        .collect::<Vec<_>>()
+        .len()
         > 0
 }
