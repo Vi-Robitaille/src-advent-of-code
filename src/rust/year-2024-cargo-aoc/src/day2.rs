@@ -1,5 +1,4 @@
 use aoc_runner_derive::{aoc, aoc_generator};
-use itertools::Itertools;
 
 type I = isize;
 type Inp = Vec<Vec<I>>;
@@ -23,8 +22,8 @@ enum State {
 fn part_one(input: &Inp) -> usize {
     input
         .iter()
-        .filter_map(|e| eval_entry(&e).then_some(1))
-        .fold(0, |a, b| a + b)
+        .filter_map(|e| eval_entry(e).then_some(1))
+        .sum()
 }
 
 fn eval_entry(e: &[I]) -> bool {
@@ -55,18 +54,17 @@ fn eval_entry(e: &[I]) -> bool {
 fn part_two(input: &Inp) -> usize {
     input
         .iter()
-        .filter_map(|e| eval_entry_part_twooo(&e).then_some(1))
-        .fold(0, |a, b| a + b)
+        .filter_map(|e| eval_entry_part_twooo(e).then_some(1))
+        .sum()
 }
 
 fn eval_entry_part_twooo(e: &[I]) -> bool {
-    (0..e.len())
+    !(0..e.len())
         .filter(|i| {
             let mut a = e.to_vec();
             let _ = a.remove(*i);
             eval_entry(&a)
         })
         .collect::<Vec<_>>()
-        .len()
-        > 0
+        .is_empty()
 }

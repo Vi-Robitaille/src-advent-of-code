@@ -1,7 +1,7 @@
 use aoc_runner_derive::{aoc, aoc_generator};
 
 use nom::{
-    bytes::complete::{is_a, tag, take_while},
+    bytes::complete::{tag, take_while},
     character::complete::char,
     combinator::map_res,
     sequence::{delimited, separated_pair},
@@ -13,11 +13,11 @@ type Inp = Vec<String>;
 // mul(8,5)
 
 fn from_b10(input: &str) -> Result<usize, std::num::ParseIntError> {
-    usize::from_str_radix(input, 10)
+    input.parse::<usize>()
 }
 
 fn is_digit(c: char) -> bool {
-    c.is_digit(10)
+    c.is_ascii_digit()
 }
 
 fn num_extraction(input: &str) -> IResult<&str, usize> {
@@ -64,10 +64,10 @@ fn part_two(input: &Inp) -> usize {
     for i in input {
         for j in 0..i.len() {
             let test_pattern = &i[j..];
-            if let Ok(_) = check_enable(test_pattern) {
+            if check_enable(test_pattern).is_ok() {
                 status = true;
             }
-            if let Ok(_) = check_disable(test_pattern) {
+            if check_disable(test_pattern).is_ok() {
                 status = false;
             }
             if let (Ok((_, (a, b))), true) = (parens(test_pattern), status) {

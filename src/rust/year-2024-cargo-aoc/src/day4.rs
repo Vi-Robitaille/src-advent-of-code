@@ -96,8 +96,8 @@ fn test_section(ss: &Inp, y: usize, x: usize) -> usize {
 #[aoc(day4, part2)]
 fn part_two(input: &Inp) -> usize {
     let mut count = 0;
-    for y in 1..input.len() -1 {
-        for x in 1..input[y].len() -1 {
+    for y in 1..input.len() - 1 {
+        for x in 1..input[y].len() - 1 {
             if input[y][x] == 'A' {
                 count += test_section_part_two(input, y, x)
             }

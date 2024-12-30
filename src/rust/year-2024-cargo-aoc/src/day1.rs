@@ -44,7 +44,5 @@ fn part_two(input: &[(usize, usize)]) -> usize {
     rhs.sort();
 
     let hm = rhs.into_iter().counts();
-    lhs.iter()
-        .map(|x| hm.get(x).or(Some(&0)).unwrap() * x)
-        .fold(0, |a, b| a + b)
+    lhs.iter().map(|x| hm.get(x).unwrap_or(&0) * x).sum()
 }
