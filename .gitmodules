@@ -1,0 +1,3 @@
+[submodule "src/rust/2022/crates/tqdm"]
+	path = src/rust/2022/crates/tqdm
+	url = https://github.com/Mathieu-Robitaille/tqdm.git

@@ -1,0 +1,6 @@
+flask
+numpy
+pygame
+pyparsing
+scipy
+pyvista
