@@ -44,17 +44,25 @@ fn parse_input_part_two(input: &str) -> InpPartTwo {
         lines_iter
             .map(|x| x.chars().rev().collect::<Vec<char>>())
             .collect_vec(),
-        )
-        .into_iter()
-        .chunk_by(|x| x.iter().all(|y| *y == ' '))
-        .into_iter()
-        .filter_map(|(key, chunk)| {
-            (!key).then(|| chunk.map(|x| {
-                x.iter().filter(|y| **y != ' ').collect::<String>().parse::<usize>().unwrap()
-            }).collect::<Vec<_>>())
+    )
+    .into_iter()
+    .chunk_by(|x| x.iter().all(|y| *y == ' '))
+    .into_iter()
+    .filter_map(|(key, chunk)| {
+        (!key).then(|| {
+            chunk
+                .map(|x| {
+                    x.iter()
+                        .filter(|y| **y != ' ')
+                        .collect::<String>()
+                        .parse::<usize>()
+                        .unwrap()
+                })
+                .collect::<Vec<_>>()
         })
-        .zip(ops)
-        .collect::<Vec<(Vec<usize>, String)>>();
+    })
+    .zip(ops)
+    .collect::<Vec<(Vec<usize>, String)>>();
     x
 }
 
@@ -77,13 +85,14 @@ fn part_one(input: &Inp) -> usize {
 
 #[aoc(day6, part2)]
 fn part_two(input: &InpPartTwo) -> usize {
-    input.iter().map(|(math, op)| {
-        match op.as_str() {
+    input
+        .iter()
+        .map(|(math, op)| match op.as_str() {
             "+" => math.iter().sum::<usize>(),
             "*" => math.iter().product::<usize>(),
             _ => panic!(),
-        }
-    }).sum()
+        })
+        .sum()
 }
 
 fn get_numbers(input: &[usize], idx: usize, offset: usize) -> StepBy<std::slice::Iter<'_, usize>> {
