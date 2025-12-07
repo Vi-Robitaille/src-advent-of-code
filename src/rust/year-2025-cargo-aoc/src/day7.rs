@@ -63,8 +63,7 @@ fn part_two(input: &Inp) -> usize {
     };
 
     // slide down the sequence
-    for (row, reflector_spots) in &input.1 {
-        println!("Current row: {}", row);
+    for (_row, reflector_spots) in &input.1 {
         // if this horizontal line contains a splitter at a current beam index
         let mut tmp_beam_indexes = HashMap::new();
         for (beam, count) in &beam_indexes {
