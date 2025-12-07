@@ -35,7 +35,7 @@ impl State {
             ((self.head_position + rhs).div_euclid(100) - self.head_position.div_euclid(100)).abs();
         println!("{wraps}");
         *self += rhs;
-        self.zero_count += wraps.abs() as usize;
+        self.zero_count += wraps.unsigned_abs();
     }
 }
 

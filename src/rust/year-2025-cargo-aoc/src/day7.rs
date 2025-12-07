@@ -16,7 +16,7 @@ fn parse_input(input: &str) -> Inp {
             .char_indices()
             .filter_map(|(c_i, c_e)| (c_e == '^').then_some(c_i))
             .collect_vec();
-        if indexes.len() > 0 {
+        if !indexes.is_empty() {
             hm.insert(i, indexes);
         }
     }
